@@ -1,4 +1,0 @@
-ALTER TABLE public.parent_student_links
-ADD COLUMN IF NOT EXISTS relationship VARCHAR(30) NOT NULL DEFAULT 'guardian',
-ADD COLUMN IF NOT EXISTS note VARCHAR(500);
-

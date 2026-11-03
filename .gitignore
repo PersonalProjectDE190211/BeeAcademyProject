@@ -21,7 +21,8 @@ bee-academy/src/generated/
 bee-academy/prisma/*.db
 bee-academy/prisma/*.db-journal
 
-# ── Claude AI config & training files ───────────────────
+# ── Claude AI & Agent config & training files ───────────
+.agent/
 .claude/
 .mcp.json
 
