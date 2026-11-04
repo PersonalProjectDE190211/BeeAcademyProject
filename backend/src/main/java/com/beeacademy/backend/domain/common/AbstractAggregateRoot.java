@@ -12,13 +12,13 @@ public abstract class AbstractAggregateRoot {
 
     private final transient List<DomainEvent> domainEvents = new ArrayList<>();
 
-    protected void registerEvent(DomainEvent event) {
+    public void registerEvent(DomainEvent event) {
         if (event != null) {
             this.domainEvents.add(event);
         }
     }
 
-    protected void registerDomainEvent(DomainEvent event) {
+    public void registerDomainEvent(DomainEvent event) {
         registerEvent(event);
     }
 
@@ -27,6 +27,10 @@ public abstract class AbstractAggregateRoot {
      */
     public List<DomainEvent> pollDomainEvents() {
         return Collections.unmodifiableList(this.domainEvents);
+    }
+
+    public List<DomainEvent> getDomainEvents() {
+        return pollDomainEvents();
     }
 
     /**
