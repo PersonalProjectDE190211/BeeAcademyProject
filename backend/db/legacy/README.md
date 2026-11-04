@@ -15,3 +15,4 @@ Thư mục này tạm thời lưu trữ 10 script SQL cũ (Supabase migrations) 
 10. `supabase_migration_teacher_quiz.sql`
 
 *Lưu ý: Sau khi hoàn thành kiểm thử và triển khai 8 file Flyway migration V1 -> V8, thư mục này có thể xóa bỏ hoàn toàn.*
+
