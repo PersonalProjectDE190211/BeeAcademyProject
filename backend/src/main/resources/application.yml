@@ -122,8 +122,8 @@ app:
 # Cloudinary - Lưu trữ và phân phối Media (Ảnh đại diện, Thumbnail, Video bài giảng)
 # ============================================================================
 cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
-  api-key: ${CLOUDINARY_API_KEY:}
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:hohjixsz}
+  api-key: ${CLOUDINARY_API_KEY:612637718783216}
   api-secret: ${CLOUDINARY_API_SECRET:}
 
 # ============================================================================

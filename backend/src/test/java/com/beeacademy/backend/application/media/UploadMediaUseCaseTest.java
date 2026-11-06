@@ -92,3 +92,4 @@ class UploadMediaUseCaseTest {
         assertThat(signature.apiKey()).isEqualTo("key123");
     }
 }
+

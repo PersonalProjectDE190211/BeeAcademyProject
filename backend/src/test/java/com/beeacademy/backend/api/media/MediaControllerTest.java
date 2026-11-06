@@ -95,3 +95,4 @@ class MediaControllerTest {
                 .andExpect(jsonPath("$.data.apiKey").value("test_api_key"));
     }
 }
+

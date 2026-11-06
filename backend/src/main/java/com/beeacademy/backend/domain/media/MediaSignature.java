@@ -14,3 +14,4 @@ public record MediaSignature(
         String folder
 ) implements Serializable {
 }
+

@@ -27,3 +27,4 @@ public interface MediaStoragePort {
      */
     void delete(String publicId, String resourceType);
 }
+
