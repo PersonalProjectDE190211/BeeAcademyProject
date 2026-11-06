@@ -37,6 +37,7 @@
         <java-jwt.version>4.4.0</java-jwt.version>
         <spring-dotenv.version>4.0.0</spring-dotenv.version>
         <apache-poi.version>5.2.5</apache-poi.version>
+        <springdoc.version>2.5.0</springdoc.version>
     </properties>
 
     <dependencies>
@@ -76,6 +77,13 @@
             <groupId>me.paulschwarz</groupId>
             <artifactId>spring-dotenv</artifactId>
             <version>${spring-dotenv.version}</version>
+        </dependency>
+
+        <!-- ===== Swagger UI / OpenAPI 3 (Tương tự Swagger của .NET) ===== -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
         </dependency>
 
         <!-- ===== JWT library ===== -->

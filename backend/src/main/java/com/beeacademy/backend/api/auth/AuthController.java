@@ -12,6 +12,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Duration;
 
 /**
@@ -19,6 +21,7 @@ import java.time.Duration;
  * - Đăng ký, Đăng nhập, Làm mới Token, Đăng xuất, Quên & Đặt lại mật khẩu.
  * - Refresh Token được lưu trữ và bảo vệ nghiêm ngặt bằng HttpOnly Cookie (SameSite=Strict, Path=/api/auth).
  */
+@Tag(name = "1. Xác thực & Quản lý Phiên (Auth)", description = "Các API đăng ký, đăng nhập, làm mới token, quên và đổi mật khẩu")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

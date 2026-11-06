@@ -51,6 +51,9 @@ public class SecurityConfig {
                                 "/api/webhooks/**",
                                 "/api/system/maintenance",
                                 "/api/categories/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
                                 "/error"
                         ).permitAll()
                         // 2. Phân vùng quyền cấp độ cao:

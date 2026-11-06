@@ -9,6 +9,8 @@ import com.beeacademy.backend.application.auth.dto.UserProfileResult;
 import com.beeacademy.backend.application.auth.usecase.ChangePasswordUseCase;
 import com.beeacademy.backend.application.auth.usecase.ManageProfileUseCase;
 import com.beeacademy.backend.platform.security.SecurityUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,7 @@ import java.util.UUID;
  * - Cập nhật thông tin cá nhân
  * - Đổi mật khẩu
  */
+@Tag(name = "2. Hồ sơ cá nhân (Profile)", description = "Các API xem thông tin cá nhân, cập nhật hồ sơ và đổi mật khẩu chủ động")
 @RestController
 @RequestMapping("/api/profile")
 public class ProfileController {
