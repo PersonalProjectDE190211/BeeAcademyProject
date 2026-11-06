@@ -20,9 +20,9 @@ spring:
   # Datasource: Supabase Postgres (kết nối qua JDBC, KHÔNG dùng Supabase client)
   # --------------------------------------------------------------------------
   datasource:
-    url: jdbc:postgresql://${SUPABASE_DB_HOST:db.haksqgakssvmlbxtqxir.supabase.co}:${SUPABASE_DB_PORT:5432}/${SUPABASE_DB_NAME:postgres}?sslmode=require&prepareThreshold=0
-    username: ${SUPABASE_DB_USER:postgres}
-    password: ${SUPABASE_DB_PASSWORD}
+    url: jdbc:postgresql://${SUPABASE_DB_HOST:aws-0-ap-northeast-2.pooler.supabase.com}:${SUPABASE_DB_PORT:5432}/${SUPABASE_DB_NAME:postgres}?sslmode=require&prepareThreshold=0
+    username: ${SUPABASE_DB_USER:postgres.wnsibvtgqlkqwxwulbff}
+    password: ${SUPABASE_DB_PASSWORD:Thanhdatvv05@}
     driver-class-name: org.postgresql.Driver
     hikari:
       # Pool size - Supabase free tier giới hạn ~25 concurrent connections
@@ -81,7 +81,7 @@ spring:
 # Cấu hình riêng cho Supabase (đọc qua @ConfigurationProperties)
 # ============================================================================
 supabase:
-  url: ${SUPABASE_URL:https://haksqgakssvmlbxtqxir.supabase.co}
+  url: ${SUPABASE_URL:https://wnsibvtgqlkqwxwulbff.supabase.co}
   anon-key: ${SUPABASE_ANON_KEY:}
   service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
   jwt-secret: ${SUPABASE_JWT_SECRET:}
