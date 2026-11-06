@@ -5,3 +5,4 @@ public enum BankVerifyStatus {
     VERIFIED,
     REJECTED
 }
+

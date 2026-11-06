@@ -19,3 +19,4 @@ public interface OrderRepositoryPort {
 
     List<Order> findPendingOrdersExpiredBefore(Instant threshold);
 }
+

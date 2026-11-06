@@ -24,3 +24,4 @@ public record TeacherBankUpdatedDomainEvent(
         this(UUID.randomUUID(), bankAccountId, teacherId, bankName, accountNumber, accountHolder, Instant.now());
     }
 }
+

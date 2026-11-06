@@ -91,6 +91,29 @@ class DomainCommonTest {
         assertTrue(aggregate.pollDomainEvents().isEmpty());
     }
 
+    @Test
+    @DisplayName("AuditLog: Tạo bản ghi kiểm toán tập trung bất biến cho các thực thể nhạy cảm")
+    void testCentralizedAuditLog() {
+        UUID entityId = UUID.randomUUID();
+        UUID actorId = UUID.randomUUID();
+
+        AuditLog log = AuditLog.record(
+                AuditEntityType.TEACHER_BANK_ACCOUNT,
+                entityId,
+                "update_bank_account",
+                actorId,
+                "teacher",
+                "Đổi ngân hàng nhận lương",
+                "{\"oldBank\":\"VCB\",\"newBank\":\"TCB\"}"
+        );
+
+        assertNotNull(log.getId());
+        assertEquals(AuditEntityType.TEACHER_BANK_ACCOUNT, log.getEntityType());
+        assertEquals("UPDATE_BANK_ACCOUNT", log.getAction());
+        assertEquals("TEACHER", log.getActorRole());
+        assertEquals("{\"oldBank\":\"VCB\",\"newBank\":\"TCB\"}", log.getDiffJson());
+    }
+
     static class TestAggregate extends AbstractAggregateRoot {
         void raise(DomainEvent event) {
             registerEvent(event);
@@ -109,4 +132,3 @@ class DomainCommonTest {
         }
     }
 }
-

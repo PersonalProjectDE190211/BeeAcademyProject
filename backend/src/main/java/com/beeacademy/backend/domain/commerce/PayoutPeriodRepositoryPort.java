@@ -16,3 +16,4 @@ public interface PayoutPeriodRepositoryPort {
 
     List<PayoutPeriod> findByStatus(PayoutStatus status);
 }
+

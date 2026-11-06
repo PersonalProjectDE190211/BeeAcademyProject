@@ -18,3 +18,4 @@ public interface RevenueSplitRepositoryPort {
 
     List<RevenueSplit> findUnassignedByTeacherIdAndPeriod(UUID teacherId, String period);
 }
+

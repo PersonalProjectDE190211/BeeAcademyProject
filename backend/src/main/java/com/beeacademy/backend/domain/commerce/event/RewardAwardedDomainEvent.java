@@ -17,3 +17,4 @@ public record RewardAwardedDomainEvent(
         this(UUID.randomUUID(), studentId, pointsAwarded, newTotalPoints, reason, Instant.now());
     }
 }
+

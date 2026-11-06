@@ -124,6 +124,36 @@ class CommerceDomainTest {
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("đã thanh toán thành công, không thể hủy");
         }
+
+        @Test
+        @DisplayName("OrderItem lưu cứng tỷ lệ phí sàn tại thời điểm mua và chặn quyết toán khi đã hoàn tiền (REFUNDED)")
+        void testOrderItemRevenueSplitAndRefundProtection() {
+            UUID orderId = UUID.randomUUID();
+            UUID courseId = UUID.randomUUID();
+            UUID teacherId = UUID.randomUUID();
+
+            OrderItem item = OrderItem.createWithTeacher(
+                    orderId, courseId, teacherId, "Toán Hình Học 11", new MoneyVnd(500_000), 20
+            );
+
+            assertThat(item.getPlatformFeeRate()).isEqualTo(20);
+            assertThat(item.getPlatformFee()).isEqualTo(new MoneyVnd(100_000));
+            assertThat(item.getTeacherAmount()).isEqualTo(new MoneyVnd(400_000));
+            assertThat(item.getItemStatus()).isEqualTo(OrderItemStatus.PENDING);
+
+            item.markPaid();
+            assertThat(item.getItemStatus()).isEqualTo(OrderItemStatus.PAID);
+
+            // Hoàn tiền trước khi đưa vào kỳ quyết toán
+            item.markRefunded(Instant.now());
+            assertThat(item.getItemStatus()).isEqualTo(OrderItemStatus.REFUNDED);
+            assertThat(item.getRefundedAt()).isNotNull();
+
+            // Mục đã hoàn tiền không được phép gán vào kỳ quyết toán
+            assertThatThrownBy(() -> item.assignToPayoutPeriod(UUID.randomUUID()))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("PAID mới được đưa vào kỳ quyết toán");
+        }
     }
 
     @Nested
@@ -304,3 +334,4 @@ class CommerceDomainTest {
         }
     }
 }
+

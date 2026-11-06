@@ -29,3 +29,4 @@ public record OrderPaidDomainEvent(
         this(UUID.randomUUID(), orderId, studentId, totalAmount, paymentRef, orderCode, List.copyOf(items), Instant.now());
     }
 }
+

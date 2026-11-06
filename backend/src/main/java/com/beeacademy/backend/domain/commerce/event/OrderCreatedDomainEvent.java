@@ -18,3 +18,4 @@ public record OrderCreatedDomainEvent(
         this(UUID.randomUUID(), orderId, studentId, totalAmount, paymentRef, Instant.now());
     }
 }
+

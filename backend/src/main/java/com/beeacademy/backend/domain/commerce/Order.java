@@ -159,6 +159,9 @@ public class Order extends AbstractAggregateRoot {
         this.status = OrderStatus.PAID;
         this.paidAt = now;
         this.updatedAt = now;
+        for (OrderItem item : this.items) {
+            item.markPaid();
+        }
 
         registerDomainEvent(new OrderPaidDomainEvent(
                 this.id,

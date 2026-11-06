@@ -9,3 +9,4 @@ public interface StudentRewardBalanceRepositoryPort {
 
     Optional<StudentRewardBalance> findByStudentId(UUID studentId);
 }
+

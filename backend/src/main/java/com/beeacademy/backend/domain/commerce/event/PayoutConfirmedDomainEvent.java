@@ -27,3 +27,4 @@ public record PayoutConfirmedDomainEvent(
         this(UUID.randomUUID(), payoutPeriodId, teacherId, monthYear, teacherAmount, transferRef, confirmedByAdminId, Instant.now());
     }
 }
+

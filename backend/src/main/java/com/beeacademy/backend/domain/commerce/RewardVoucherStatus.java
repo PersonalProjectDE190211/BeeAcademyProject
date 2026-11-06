@@ -6,3 +6,4 @@ public enum RewardVoucherStatus {
     EXPIRED,
     REVOKED
 }
+

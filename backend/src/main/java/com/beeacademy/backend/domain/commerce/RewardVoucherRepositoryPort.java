@@ -14,3 +14,4 @@ public interface RewardVoucherRepositoryPort {
 
     List<RewardVoucher> findAvailableForStudent(UUID studentId);
 }
+

@@ -6,3 +6,4 @@ public enum PayoutStatus {
     PAID,
     REJECTED
 }
+

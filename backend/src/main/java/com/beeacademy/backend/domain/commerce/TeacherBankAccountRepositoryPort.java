@@ -14,3 +14,4 @@ public interface TeacherBankAccountRepositoryPort {
 
     List<TeacherBankAccount> findByVerifyStatus(BankVerifyStatus status);
 }
+
