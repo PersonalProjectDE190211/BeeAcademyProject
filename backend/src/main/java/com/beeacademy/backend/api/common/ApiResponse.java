@@ -1,0 +1,26 @@
+package com.beeacademy.backend.api.common;
+
+import java.time.Instant;
+
+/**
+ * Cấu trúc Response chuẩn hóa cho toàn bộ REST API của BeeAcademy.
+ */
+public record ApiResponse<T>(
+        boolean success,
+        String message,
+        T data,
+        Instant timestamp
+) {
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(true, "Thao tác thành công", data, Instant.now());
+    }
+
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>(true, message, data, Instant.now());
+    }
+
+    public static ApiResponse<Void> ok(String message) {
+        return new ApiResponse<>(true, message, null, Instant.now());
+    }
+}
+
