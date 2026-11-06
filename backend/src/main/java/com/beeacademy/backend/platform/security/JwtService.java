@@ -51,6 +51,10 @@ public class JwtService {
                 .sign(algorithm);
     }
 
+    public String generateAccessToken(UUID userId, String email, String role) {
+        return generateAccessToken(userId, email, role, "");
+    }
+
     public Optional<DecodedJWT> verifyToken(String token) {
         if (token == null || token.isBlank()) {
             return Optional.empty();

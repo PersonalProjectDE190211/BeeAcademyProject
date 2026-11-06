@@ -21,6 +21,7 @@ public class RefreshToken extends AbstractAggregateRoot {
     private final UUID id;
     private final UUID userId;
     private final String tokenHash;
+    private final UUID familyId;
     private final Instant expiresAt;
     private final Instant createdAt;
     private Instant revokedAt;
@@ -29,6 +30,7 @@ public class RefreshToken extends AbstractAggregateRoot {
     protected RefreshToken(UUID id,
                            UUID userId,
                            String tokenHash,
+                           UUID familyId,
                            Instant expiresAt,
                            Instant createdAt,
                            Instant revokedAt,
@@ -36,6 +38,7 @@ public class RefreshToken extends AbstractAggregateRoot {
         this.id = id;
         this.userId = userId;
         this.tokenHash = tokenHash;
+        this.familyId = familyId != null ? familyId : UUID.randomUUID();
         this.expiresAt = expiresAt;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.revokedAt = revokedAt;
@@ -50,6 +53,13 @@ public class RefreshToken extends AbstractAggregateRoot {
      * @param ttl       Thời gian sống của token (ví dụ: 7 ngày, 30 ngày)
      */
     public static RefreshToken issue(UUID userId, String tokenHash, Duration ttl) {
+        return issue(userId, tokenHash, ttl, UUID.randomUUID());
+    }
+
+    /**
+     * Cấp mới một Refresh Token trong cùng một phiên Token Family (khi xoay vòng).
+     */
+    public static RefreshToken issue(UUID userId, String tokenHash, Duration ttl, UUID familyId) {
         if (userId == null) {
             throw new DomainException("INVALID_USER_ID", "User ID không được null");
         }
@@ -65,6 +75,7 @@ public class RefreshToken extends AbstractAggregateRoot {
                 UUID.randomUUID(),
                 userId,
                 tokenHash,
+                familyId != null ? familyId : UUID.randomUUID(),
                 now.plus(ttl),
                 now,
                 null,
@@ -82,7 +93,18 @@ public class RefreshToken extends AbstractAggregateRoot {
                                          Instant createdAt,
                                          Instant revokedAt,
                                          String replacedByTokenHash) {
-        return new RefreshToken(id, userId, tokenHash, expiresAt, createdAt, revokedAt, replacedByTokenHash);
+        return new RefreshToken(id, userId, tokenHash, UUID.randomUUID(), expiresAt, createdAt, revokedAt, replacedByTokenHash);
+    }
+
+    public static RefreshToken rehydrate(UUID id,
+                                         UUID userId,
+                                         String tokenHash,
+                                         UUID familyId,
+                                         Instant expiresAt,
+                                         Instant createdAt,
+                                         Instant revokedAt,
+                                         String replacedByTokenHash) {
+        return new RefreshToken(id, userId, tokenHash, familyId, expiresAt, createdAt, revokedAt, replacedByTokenHash);
     }
 
     /**
@@ -137,6 +159,7 @@ public class RefreshToken extends AbstractAggregateRoot {
     public UUID getId() { return id; }
     public UUID getUserId() { return userId; }
     public String getTokenHash() { return tokenHash; }
+    public UUID getFamilyId() { return familyId; }
     public Instant getExpiresAt() { return expiresAt; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getRevokedAt() { return revokedAt; }
