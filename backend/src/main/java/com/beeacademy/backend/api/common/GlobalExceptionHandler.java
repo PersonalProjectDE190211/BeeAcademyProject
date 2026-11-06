@@ -68,6 +68,20 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of("FILE_TOO_LARGE", "Dung lượng file tải lên vượt quá giới hạn tối đa của hệ thống"));
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        log.warn("Dữ liệu gửi lên không đúng định dạng JSON hoặc encoding UTF-8: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorResponse.of("MALFORMED_JSON", "Dữ liệu gửi lên không đúng định dạng JSON hoặc mã hóa UTF-8 không hợp lệ"));
+    }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        log.warn("Tài nguyên không tồn tại: {}", ex.getResourcePath());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiErrorResponse.of("NOT_FOUND", "Không tìm thấy endpoint hoặc tài nguyên: /" + ex.getResourcePath()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGeneralException(Exception ex) {
         log.error("Lỗi hệ thống chưa được phân loại (Unhandled Exception): ", ex);
