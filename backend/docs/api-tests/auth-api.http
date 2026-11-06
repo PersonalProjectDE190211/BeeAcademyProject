@@ -1,0 +1,91 @@
+### ==============================================================================
+### BeeAcademy LMS - Kịch bản Kiểm thử API Xác thực (Auth & Profile - UC01..UC05)
+### Sử dụng với VS Code REST Client hoặc IntelliJ HTTP Client
+### ==============================================================================
+
+@baseUrl = http://localhost:8080/api
+@testEmail = student.test@beeacademy.edu.vn
+@testPassword = Password@123456
+
+### ------------------------------------------------------------------------------
+### 1. UC01: Đăng ký tài khoản học sinh mới
+### ------------------------------------------------------------------------------
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}",
+  "fullName": "Nguyễn Văn Test",
+  "role": "STUDENT"
+}
+
+### ------------------------------------------------------------------------------
+### 2. UC02: Đăng nhập hệ thống
+### Trình duyệt / REST Client tự động lưu Cookie 'refreshToken' (HttpOnly, SameSite=Strict)
+### ------------------------------------------------------------------------------
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}"
+}
+
+### Lấy Access Token từ phản hồi đăng nhập
+@accessToken = {{loginRequest.response.body.data.accessToken}}
+
+### ------------------------------------------------------------------------------
+### 3. UC04: Lấy thông tin cá nhân (Yêu cầu Header Authorization Bearer)
+### ------------------------------------------------------------------------------
+GET {{baseUrl}}/profile/me
+Authorization: Bearer {{accessToken}}
+
+### ------------------------------------------------------------------------------
+### 4. UC04: Cập nhật thông tin hồ sơ
+### ------------------------------------------------------------------------------
+PUT {{baseUrl}}/profile/me
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Nguyễn Văn Test (Đã cập nhật)",
+  "phone": "0987654321",
+  "bio": "Học sinh yêu thích môn Toán và Lập trình"
+}
+
+### ------------------------------------------------------------------------------
+### 5. UC02: Làm mới phiên đăng nhập (Refresh Token Rotation)
+### Tự động gửi kèm Cookie 'refreshToken' từ bước đăng nhập
+### ------------------------------------------------------------------------------
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+### ------------------------------------------------------------------------------
+### 6. UC05: Đổi mật khẩu chủ động
+### ------------------------------------------------------------------------------
+PUT {{baseUrl}}/profile/me/password
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "oldPassword": "{{testPassword}}",
+  "newPassword": "NewPassword@123456"
+}
+
+### ------------------------------------------------------------------------------
+### 7. UC03: Quên mật khẩu (Gửi mã OTP về email)
+### ------------------------------------------------------------------------------
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}"
+}
+
+### ------------------------------------------------------------------------------
+### 8. UC02: Đăng xuất người dùng (Thu hồi token và xóa Cookie)
+### ------------------------------------------------------------------------------
+POST {{baseUrl}}/auth/logout
+
