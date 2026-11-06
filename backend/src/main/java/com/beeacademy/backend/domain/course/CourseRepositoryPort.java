@@ -19,6 +19,8 @@ public interface CourseRepositoryPort {
 
     List<Course> findPublishedCourses(UUID categoryId, Integer grade);
 
+    List<Course> findByStatus(CourseStatus status);
+
     boolean existsById(UUID id);
 
     void deleteById(UUID id);

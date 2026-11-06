@@ -1,0 +1,104 @@
+### ============================================================================
+### Bee Academy - Module 2: Course & Curriculum API Scenarios (UC06, UC07, UC30, UC31, UC39, UC41)
+### ============================================================================
+
+@baseUrl = http://localhost:8080/api
+
+### 1. Lấy danh mục môn học (Công khai)
+GET {{baseUrl}}/courses/public/categories
+Accept: application/json
+
+### 2. Tìm kiếm và lọc khóa học (Công khai)
+GET {{baseUrl}}/courses/public?keyword=Toán&sortBy=price_asc
+Accept: application/json
+
+### 3. Xem chi tiết khóa học bằng Slug (Công khai - bài không thử bị ẩn URL)
+GET {{baseUrl}}/courses/public/slug/toan-lop-8-nang-cao
+Accept: application/json
+
+### 4. Đăng nhập tài khoản Giáo viên
+# @name teacherLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "teacher@beeacademy.edu.vn",
+  "password": "Password123@"
+}
+
+### Lưu Token giáo viên
+@teacherToken = {{teacherLogin.response.body.data.accessToken}}
+
+### 5. Giáo viên tạo khóa học mới (DRAFT)
+# @name createCourse
+POST {{baseUrl}}/teacher/courses
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "categoryId": "11111111-1111-1111-1111-111111111111",
+  "title": "Vật Lý Lớp 10 Chuyển Động Cơ Học",
+  "description": "Nắm vững động học chất điểm và định luật Newton",
+  "thumbnailUrl": "https://cdn.beeacademy.edu.vn/courses/phys10.jpg",
+  "priceVnd": 250000,
+  "grades": [10]
+}
+
+### Lưu ID khóa học vừa tạo
+@createdCourseId = {{createCourse.response.body.data.id}}
+
+### 6. Giáo viên thêm Chương học
+# @name addChapter
+POST {{baseUrl}}/teacher/courses/{{createdCourseId}}/chapters
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "title": "Chương 1: Chuyển Động Thẳng Đều",
+  "description": "Vận tốc, phương trình tọa độ và đồ thị chuyển động"
+}
+
+### Lưu ID chương học
+@createdChapterId = {{addChapter.response.body.data.chapters[0].id}}
+
+### 7. Giáo viên thêm Bài giảng (Bài học thử Free Preview)
+POST {{baseUrl}}/teacher/courses/{{createdCourseId}}/chapters/{{createdChapterId}}/lessons
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "title": "Bài 1: Khái niệm chất điểm và quỹ đạo",
+  "videoUrl": "https://storage.beeacademy.edu.vn/videos/lesson1.mp4",
+  "durationSec": 900,
+  "isFreePreview": true
+}
+
+### 8. Giáo viên nộp khóa học chờ Admin duyệt (UC30, UC39)
+POST {{baseUrl}}/teacher/courses/{{createdCourseId}}/submit-review
+Authorization: Bearer {{teacherToken}}
+
+### 9. Đăng nhập tài khoản Quản trị viên (Admin)
+# @name adminLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@beeacademy.edu.vn",
+  "password": "AdminPassword123@"
+}
+
+### Lưu Token admin
+@adminToken = {{adminLogin.response.body.data.accessToken}}
+
+### 10. Admin xem danh sách khóa học chờ duyệt
+GET {{baseUrl}}/admin/courses/pending
+Authorization: Bearer {{adminToken}}
+
+### 11. Admin phê duyệt xuất bản khóa học (PUBLISHED)
+POST {{baseUrl}}/admin/courses/{{createdCourseId}}/approve
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "reasonOrComment": "Khóa học có giáo trình chuẩn mực và hình ảnh sắc nét"
+}

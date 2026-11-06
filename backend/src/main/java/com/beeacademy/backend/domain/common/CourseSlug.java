@@ -16,6 +16,10 @@ public record CourseSlug(String value) implements Serializable {
         }
     }
 
+    public static CourseSlug of(String value) {
+        return new CourseSlug(value);
+    }
+
     /**
      * Tạo CourseSlug từ tiêu đề khóa học tiếng Việt.
      * Ví dụ: "Toán Lớp 8: Đa thức & Hằng đẳng thức" -> "toan-lop-8-da-thuc-hang-dang-thuc"
