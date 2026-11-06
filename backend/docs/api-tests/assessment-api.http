@@ -1,0 +1,75 @@
+### ==============================================================================
+### BEEACADEMY API SCENARIOS: MODULE 4 - ASSESSMENT & QUESTION BANK (UC17-19, UC33-35)
+### ==============================================================================
+
+@baseUrl = http://localhost:8080/api
+@teacherToken = eyJhbGciOiJIUzI1NiJ9...
+@studentToken = eyJhbGciOiJIUzI1NiJ9...
+
+### 1. UC34: Giáo viên tạo câu hỏi mới trong ngân hàng câu hỏi
+POST {{baseUrl}}/teacher/questions
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "chapterId": "11111111-1111-1111-1111-111111111111",
+  "grade": 8,
+  "content": "Trong ngôn ngữ lập trình Java, từ khóa nào dùng để kế thừa một lớp cha?",
+  "explanation": "Từ khóa extends dùng để kế thừa lớp cha, implements dùng để cài đặt interface.",
+  "difficulty": "EASY",
+  "type": "MULTIPLE_CHOICE",
+  "tags": ["java", "oop", "inheritance"],
+  "choices": [
+    { "content": "implements", "isCorrect": false, "position": 1 },
+    { "content": "extends", "isCorrect": true, "position": 2 },
+    { "content": "inherits", "isCorrect": false, "position": 3 },
+    { "content": "super", "isCorrect": false, "position": 4 }
+  ]
+}
+
+### 2. UC34: Giáo viên xem danh sách câu hỏi của mình
+GET {{baseUrl}}/teacher/questions
+Authorization: Bearer {{teacherToken}}
+Accept: application/json
+
+### 3. UC33: Giáo viên thiết lập cấu hình bài kiểm tra cho chương
+@chapterId = 11111111-1111-1111-1111-111111111111
+POST {{baseUrl}}/teacher/quiz-configs
+Authorization: Bearer {{teacherToken}}
+Content-Type: application/json
+
+{
+  "chapterId": "{{chapterId}}",
+  "totalQuestions": 10,
+  "easyCount": 3,
+  "mediumCount": 5,
+  "hardCount": 2,
+  "timeLimitMinutes": 30,
+  "passingScore": 80.0,
+  "shuffleQuestions": true,
+  "shuffleChoices": true,
+  "maxAttempts": 3
+}
+
+### 4. UC33: Giáo viên xem cấu hình bài kiểm tra chương
+GET {{baseUrl}}/teacher/quiz-configs/chapter/{{chapterId}}
+Authorization: Bearer {{teacherToken}}
+Accept: application/json
+
+### 5. UC17: Học sinh bắt đầu làm bài kiểm tra chương (Nhận đề thi xáo trộn, ẩn đáp án đúng)
+POST {{baseUrl}}/student/quizzes/chapter/{{chapterId}}/start
+Authorization: Bearer {{studentToken}}
+Accept: application/json
+
+### 6. UC17, UC18: Học sinh nộp bài kiểm tra và nhận điểm tự động
+@attemptId = 22222222-2222-2222-2222-222222222222
+POST {{baseUrl}}/student/quizzes/submit
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "attemptId": "{{attemptId}}",
+  "answers": {
+    "33333333-3333-3333-3333-333333333333": "44444444-4444-4444-4444-444444444444"
+  }
+}
