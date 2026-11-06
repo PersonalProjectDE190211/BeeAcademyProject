@@ -16,6 +16,13 @@ spring:
   application:
     name: bee-academy-backend
 
+  # Cấu hình tải file dung lượng lớn (video bài giảng lên đến 500MB)
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 500MB
+      max-request-size: 500MB
+
   # --------------------------------------------------------------------------
   # Datasource: Supabase Postgres (kết nối qua JDBC, KHÔNG dùng Supabase client)
   # --------------------------------------------------------------------------
@@ -110,6 +117,14 @@ app:
     api-key: ${GEMINI_API_KEY:}
     # gemini-2.0-flash đã bị Google cắt quota free tier (429 limit: 0) — dùng 2.5-flash
     model: ${GEMINI_MODEL:gemini-2.5-flash}
+
+# ============================================================================
+# Cloudinary - Lưu trữ và phân phối Media (Ảnh đại diện, Thumbnail, Video bài giảng)
+# ============================================================================
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+  api-key: ${CLOUDINARY_API_KEY:}
+  api-secret: ${CLOUDINARY_API_SECRET:}
 
 # ============================================================================
 # SePay Webhook — xác thực API key

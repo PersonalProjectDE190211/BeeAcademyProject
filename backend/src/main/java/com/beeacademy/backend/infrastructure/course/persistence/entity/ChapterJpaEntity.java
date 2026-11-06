@@ -83,3 +83,4 @@ public class ChapterJpaEntity {
     public List<LessonJpaEntity> getLessons() { return lessons; }
     public void setLessons(List<LessonJpaEntity> lessons) { this.lessons = lessons; }
 }
+

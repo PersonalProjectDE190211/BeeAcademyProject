@@ -25,3 +25,4 @@ public record CreateCourseRequest(
         List<Integer> grades
 ) {
 }
+

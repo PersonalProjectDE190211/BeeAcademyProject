@@ -100,3 +100,4 @@ public class PublicCourseController {
         return ResponseEntity.ok(ApiResponse.success(reviews));
     }
 }
+

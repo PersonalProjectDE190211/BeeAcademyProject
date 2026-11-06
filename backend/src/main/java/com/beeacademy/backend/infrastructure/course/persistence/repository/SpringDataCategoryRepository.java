@@ -20,3 +20,4 @@ public interface SpringDataCategoryRepository extends JpaRepository<CategoryJpaE
 
     boolean existsBySlug(String slug);
 }
+

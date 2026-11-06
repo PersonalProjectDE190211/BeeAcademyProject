@@ -13,3 +13,4 @@ public record CreateCourseCommand(
         List<Integer> grades
 ) {
 }
+

@@ -108,3 +108,4 @@ class PublicCourseControllerTest {
                 .andExpect(jsonPath("$.data[0].name").value("Toán Học"));
     }
 }
+

@@ -9,3 +9,4 @@ public record AddChapterCommand(
         String description
 ) {
 }
+

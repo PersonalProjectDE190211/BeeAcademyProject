@@ -4,3 +4,4 @@ public record ReviewCourseDecisionRequest(
         String reasonOrComment
 ) {
 }
+

@@ -63,3 +63,4 @@ public class ReviewCourseApprovalUseCase {
                 .orElseThrow(() -> new DomainException("COURSE_NOT_FOUND", "Không tìm thấy khóa học với ID: " + courseId));
     }
 }
+

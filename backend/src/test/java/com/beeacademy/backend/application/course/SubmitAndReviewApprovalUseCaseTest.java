@@ -102,3 +102,4 @@ class SubmitAndReviewApprovalUseCaseTest {
         assertThat(rejected.status()).isEqualTo(CourseStatus.REJECTED.name());
     }
 }
+

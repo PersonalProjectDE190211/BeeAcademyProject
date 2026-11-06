@@ -113,6 +113,13 @@
             <version>1.0.2</version>
         </dependency>
 
+        <!-- ===== Cloudinary: Lưu trữ Media (Ảnh & Video) trên CDN đám mây ===== -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.36.0</version>
+        </dependency>
+
         <!-- ===== Certificate PDF + QR verification ===== -->
         <dependency>
             <groupId>com.github.librepdf</groupId>

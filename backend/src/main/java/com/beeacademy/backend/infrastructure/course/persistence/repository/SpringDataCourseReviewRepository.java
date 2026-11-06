@@ -18,3 +18,4 @@ public interface SpringDataCourseReviewRepository extends JpaRepository<CourseRe
 
     List<CourseReviewJpaEntity> findByCourseIdOrderByCreatedAtDesc(UUID courseId);
 }
+

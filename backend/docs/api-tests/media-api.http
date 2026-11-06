@@ -1,0 +1,46 @@
+### ============================================================================
+### Bee Academy - Media & Cloudinary Storage Scenarios
+### ============================================================================
+
+@baseUrl = http://localhost:8080/api
+
+### 1. Đăng nhập Giáo viên lấy Token
+# @name teacherLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "teacher@beeacademy.edu.vn",
+  "password": "Password123@"
+}
+
+### Lưu Token giáo viên
+@teacherToken = {{teacherLogin.response.body.data.accessToken}}
+
+### 2. Lấy chữ ký số Signed Upload (Dành cho Frontend upload trực tiếp lên Cloudinary)
+GET {{baseUrl}}/media/signature?folder=beeacademy/courses/videos&resourceType=video
+Authorization: Bearer {{teacherToken}}
+
+### 3. Upload ảnh Thumbnail khóa học qua Backend API
+POST {{baseUrl}}/media/upload/image
+Authorization: Bearer {{teacherToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sample_thumbnail.jpg"
+Content-Type: image/jpeg
+
+< ./sample.jpg
+--WebAppBoundary--
+
+### 4. Upload video bài giảng qua Backend API (Tự động trích xuất durationSec)
+POST {{baseUrl}}/media/upload/video
+Authorization: Bearer {{teacherToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="lesson_sample.mp4"
+Content-Type: video/mp4
+
+< ./sample.mp4
+--WebAppBoundary--

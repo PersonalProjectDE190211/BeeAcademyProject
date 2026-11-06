@@ -81,3 +81,4 @@ class BrowseCatalogUseCaseTest {
         assertThat(sortedRating.get(0).averageRating()).isEqualTo(BigDecimal.valueOf(4.8));
     }
 }
+

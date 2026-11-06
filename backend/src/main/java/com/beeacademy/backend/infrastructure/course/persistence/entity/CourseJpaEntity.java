@@ -179,3 +179,4 @@ public class CourseJpaEntity {
     public List<ChapterJpaEntity> getChapters() { return chapters; }
     public void setChapters(List<ChapterJpaEntity> chapters) { this.chapters = chapters; }
 }
+

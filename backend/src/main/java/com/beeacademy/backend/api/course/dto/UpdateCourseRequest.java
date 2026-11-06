@@ -25,3 +25,4 @@ public record UpdateCourseRequest(
         List<Integer> grades
 ) {
 }
+

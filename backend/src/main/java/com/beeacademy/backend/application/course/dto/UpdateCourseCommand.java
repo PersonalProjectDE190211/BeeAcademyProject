@@ -14,3 +14,4 @@ public record UpdateCourseCommand(
         List<Integer> grades
 ) {
 }
+

@@ -11,3 +11,4 @@ public record AddChapterRequest(
         String description
 ) {
 }
+

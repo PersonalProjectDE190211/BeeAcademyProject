@@ -35,3 +35,4 @@ public class SubmitCourseForReviewUseCase {
         return CourseDetailResult.from(saved, true);
     }
 }
+

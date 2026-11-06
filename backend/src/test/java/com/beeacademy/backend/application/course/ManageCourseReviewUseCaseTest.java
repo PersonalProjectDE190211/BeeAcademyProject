@@ -61,3 +61,4 @@ class ManageCourseReviewUseCaseTest {
         assertThat(course.getTotalReviews()).isEqualTo(1);
     }
 }
+

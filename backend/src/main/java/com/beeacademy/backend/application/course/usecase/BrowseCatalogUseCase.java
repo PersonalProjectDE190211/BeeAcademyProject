@@ -67,3 +67,4 @@ public class BrowseCatalogUseCase {
         return stream.map(CourseSummaryResult::from).toList();
     }
 }
+

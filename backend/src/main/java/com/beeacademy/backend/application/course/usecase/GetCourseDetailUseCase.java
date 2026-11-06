@@ -37,3 +37,4 @@ public class GetCourseDetailUseCase {
         return CourseDetailResult.from(course, false);
     }
 }
+
