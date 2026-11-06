@@ -1,0 +1,68 @@
+### ==============================================================================
+### BEEACADEMY API SCENARIOS: MODULE 3 - LEARNING SPACE & CERTIFICATES (UC13-16, UC20-21, UC36)
+### ==============================================================================
+
+@baseUrl = http://localhost:8080/api
+@studentToken = eyJhbGciOiJIUzI1NiJ9...
+
+### 1. UC13: Lấy danh sách khóa học của học viên (My Courses)
+GET {{baseUrl}}/learning/my-courses
+Authorization: Bearer {{studentToken}}
+Accept: application/json
+
+### 2. UC14: Lấy nội dung bài học trong không gian học tập (Video streaming & Last position)
+@courseId = 11111111-1111-1111-1111-111111111111
+@lessonId = 22222222-2222-2222-2222-222222222222
+GET {{baseUrl}}/learning/courses/{{courseId}}/lessons/{{lessonId}}
+Authorization: Bearer {{studentToken}}
+Accept: application/json
+
+### 3. UC14, UC15: Cập nhật tiến độ xem video (Anti-Skip Heartbeat)
+POST {{baseUrl}}/learning/courses/{{courseId}}/lessons/{{lessonId}}/progress
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "startSec": 0,
+  "endSec": 300,
+  "currentPositionSec": 300
+}
+
+### 4. UC21: Đặt câu hỏi thảo luận dưới bài giảng (Q&A)
+POST {{baseUrl}}/learning/courses/{{courseId}}/lessons/{{lessonId}}/discussions
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "title": "Em muốn hỏi về nguyên lý Inversion of Control trong Spring Boot",
+  "content": "Thầy cho em hỏi IoC Container quản lý vòng đời Bean như thế nào ạ?"
+}
+
+### 5. UC36: Xem danh sách câu hỏi thảo luận dưới bài giảng
+GET {{baseUrl}}/learning/lessons/{{lessonId}}/discussions
+Authorization: Bearer {{studentToken}}
+Accept: application/json
+
+### 6. UC36: Trả lời / phản hồi câu hỏi thảo luận
+@threadId = 33333333-3333-3333-3333-333333333333
+POST {{baseUrl}}/learning/discussions/{{threadId}}/replies
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "content": "Chào em, Spring Container khởi tạo Bean thông qua Reflection và tiêm phụ thuộc qua Constructor Injection nhé!"
+}
+
+### 7. UC20: Danh sách chứng chỉ của học viên
+GET {{baseUrl}}/certificates/my
+Authorization: Bearer {{studentToken}}
+Accept: application/json
+
+### 8. UC20: Tải file PDF chứng chỉ số hoàn thành khóa học (Landscape A4 + QR Code)
+@certificateId = 44444444-4444-4444-4444-444444444444
+GET {{baseUrl}}/certificates/{{certificateId}}/download
+Authorization: Bearer {{studentToken}}
+
+### 9. UC20: Tra cứu và xác thực chứng chỉ công khai (Không cần đăng nhập)
+GET {{baseUrl}}/certificates/public/verify/CERT-2026-BEE12345
+Accept: application/json
