@@ -1,22 +1,26 @@
 package com.beeacademy.backend.application.admin.usecase;
 
 import com.beeacademy.backend.application.admin.dto.AdminDashboardDto;
-import com.beeacademy.backend.infrastructure.admin.query.AdminAnalyticsQueryService;
+import com.beeacademy.backend.domain.admin.AdminAnalyticsQueryPort;
+import com.beeacademy.backend.domain.admin.PlatformAnalytics;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Use case xem Dashboard quản trị: GMV, phí nền tảng, phần giáo viên, thống kê người dùng/khóa học (UC38).
+ */
 @Service
 @Transactional(readOnly = true)
 public class GetAdminDashboardUseCase {
 
-    private final AdminAnalyticsQueryService analyticsQueryService;
+    private final AdminAnalyticsQueryPort analyticsQueryPort;
 
-    public GetAdminDashboardUseCase(AdminAnalyticsQueryService analyticsQueryService) {
-        this.analyticsQueryService = analyticsQueryService;
+    public GetAdminDashboardUseCase(AdminAnalyticsQueryPort analyticsQueryPort) {
+        this.analyticsQueryPort = analyticsQueryPort;
     }
 
     public AdminDashboardDto execute() {
-        AdminAnalyticsQueryService.AdminAnalyticsData data = analyticsQueryService.getPlatformAnalytics();
+        PlatformAnalytics data = analyticsQueryPort.getPlatformAnalytics();
         return new AdminDashboardDto(
                 data.totalGmv(),
                 data.platformFee(),
@@ -39,4 +43,3 @@ public class GetAdminDashboardUseCase {
         );
     }
 }
-

@@ -2,7 +2,8 @@ package com.beeacademy.backend.application.admin;
 
 import com.beeacademy.backend.application.admin.dto.AdminDashboardDto;
 import com.beeacademy.backend.application.admin.usecase.GetAdminDashboardUseCase;
-import com.beeacademy.backend.infrastructure.admin.query.AdminAnalyticsQueryService;
+import com.beeacademy.backend.domain.admin.AdminAnalyticsQueryPort;
+import com.beeacademy.backend.domain.admin.PlatformAnalytics;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +18,7 @@ import static org.mockito.Mockito.when;
 class GetAdminDashboardUseCaseTest {
 
     @Mock
-    private AdminAnalyticsQueryService analyticsQueryService;
+    private AdminAnalyticsQueryPort analyticsQueryService;
 
     @InjectMocks
     private GetAdminDashboardUseCase useCase;
@@ -25,7 +26,7 @@ class GetAdminDashboardUseCaseTest {
     @Test
     @DisplayName("execute trả về AdminDashboardDto đầy đủ các trường thống kê")
     void shouldReturnDashboardDto() {
-        AdminAnalyticsQueryService.AdminAnalyticsData data = new AdminAnalyticsQueryService.AdminAnalyticsData(
+        PlatformAnalytics data = new PlatformAnalytics(
                 15_000_000L,
                 3_000_000L,
                 12_000_000L,

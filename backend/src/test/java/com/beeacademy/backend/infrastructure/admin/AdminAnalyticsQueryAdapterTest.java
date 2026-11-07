@@ -1,6 +1,7 @@
 package com.beeacademy.backend.infrastructure.admin;
 
-import com.beeacademy.backend.infrastructure.admin.query.AdminAnalyticsQueryService;
+import com.beeacademy.backend.domain.admin.PlatformAnalytics;
+import com.beeacademy.backend.infrastructure.admin.query.AdminAnalyticsQueryAdapter;
 import com.beeacademy.backend.infrastructure.auth.persistence.repository.SpringDataProfileRepository;
 import com.beeacademy.backend.infrastructure.commerce.persistence.repository.SpringDataRevenueSplitRepository;
 import com.beeacademy.backend.infrastructure.course.persistence.repository.SpringDataCourseRepository;
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AdminAnalyticsQueryServiceTest {
+class AdminAnalyticsQueryAdapterTest {
 
     @Mock
     private SpringDataRevenueSplitRepository revenueSplitRepository;
@@ -35,7 +36,7 @@ class AdminAnalyticsQueryServiceTest {
     private SpringDataComplaintRepository complaintRepository;
 
     @InjectMocks
-    private AdminAnalyticsQueryService queryService;
+    private AdminAnalyticsQueryAdapter queryService;
 
     @Test
     @DisplayName("getPlatformAnalytics tổng hợp chính xác các chỉ số GMV, User, Course và Hỗ trợ")
@@ -64,7 +65,7 @@ class AdminAnalyticsQueryServiceTest {
         when(complaintRepository.countByStatus("open")).thenReturn(3L);
         when(complaintRepository.countByStatus("in_progress")).thenReturn(1L);
 
-        AdminAnalyticsQueryService.AdminAnalyticsData data = queryService.getPlatformAnalytics();
+        PlatformAnalytics data = queryService.getPlatformAnalytics();
 
         assertThat(data.totalGmv()).isEqualTo(10_000_000L);
         assertThat(data.platformFee()).isEqualTo(2_000_000L);
