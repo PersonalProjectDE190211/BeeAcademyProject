@@ -4,7 +4,7 @@ import com.beeacademy.backend.application.auth.dto.ForgotPasswordCommand;
 import com.beeacademy.backend.application.auth.service.OtpService;
 import com.beeacademy.backend.domain.auth.Profile;
 import com.beeacademy.backend.domain.auth.ProfileRepositoryPort;
-import com.beeacademy.backend.infrastructure.common.adapter.SmtpMailAdapter;
+import com.beeacademy.backend.domain.common.MailSenderPort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,14 +17,14 @@ public class ForgotPasswordUseCase {
 
     private final ProfileRepositoryPort profileRepository;
     private final OtpService otpService;
-    private final SmtpMailAdapter mailAdapter;
+    private final MailSenderPort mailSender;
 
     public ForgotPasswordUseCase(ProfileRepositoryPort profileRepository,
                                  OtpService otpService,
-                                 SmtpMailAdapter mailAdapter) {
+                                 MailSenderPort mailSender) {
         this.profileRepository = profileRepository;
         this.otpService = otpService;
-        this.mailAdapter = mailAdapter;
+        this.mailSender = mailSender;
     }
 
     public void execute(ForgotPasswordCommand command) {
@@ -38,9 +38,8 @@ public class ForgotPasswordUseCase {
         if (profileOpt.isPresent()) {
             // Tạo mã OTP 6 số có hạn 15 phút
             String otp = otpService.generateOtp("RESET_PWD:" + email, 15);
-            mailAdapter.sendOtpEmail(email, otp, 15);
+            mailSender.sendOtpEmail(email, otp, 15);
         }
         // Trả về thành công kể cả không tìm thấy để chống user enumeration attack
     }
 }
-

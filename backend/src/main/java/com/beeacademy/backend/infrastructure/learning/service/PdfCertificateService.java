@@ -1,5 +1,6 @@
 package com.beeacademy.backend.infrastructure.learning.service;
 
+import com.beeacademy.backend.domain.learning.CertificatePdfGeneratorPort;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
@@ -25,7 +26,7 @@ import java.util.UUID;
  * - Khung viền trang trọng (Academic border) màu vàng kim và xanh hải quân.
  */
 @Service
-public class PdfCertificateService {
+public class PdfCertificateService implements CertificatePdfGeneratorPort {
 
     private static final Logger log = LoggerFactory.getLogger(PdfCertificateService.class);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.of("Asia/Ho_Chi_Minh"));

@@ -1,5 +1,6 @@
 package com.beeacademy.backend.infrastructure.common.adapter;
 
+import com.beeacademy.backend.domain.common.MailSenderPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Component;
  * Tự động chuyển hướng ghi log an toàn nếu SMTP chưa được cấu hình credentials.
  */
 @Component
-public class SmtpMailAdapter {
+public class SmtpMailAdapter implements MailSenderPort {
 
     private static final Logger log = LoggerFactory.getLogger(SmtpMailAdapter.class);
 

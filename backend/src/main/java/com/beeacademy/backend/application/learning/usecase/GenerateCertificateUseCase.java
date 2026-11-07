@@ -3,8 +3,8 @@ package com.beeacademy.backend.application.learning.usecase;
 import com.beeacademy.backend.application.learning.dto.CertificateResult;
 import com.beeacademy.backend.domain.common.DomainException;
 import com.beeacademy.backend.domain.learning.Certificate;
+import com.beeacademy.backend.domain.learning.CertificatePdfGeneratorPort;
 import com.beeacademy.backend.domain.learning.CertificateRepositoryPort;
-import com.beeacademy.backend.infrastructure.learning.service.PdfCertificateService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,15 +19,15 @@ import java.util.UUID;
 public class GenerateCertificateUseCase {
 
     private final CertificateRepositoryPort certificateRepository;
-    private final PdfCertificateService pdfCertificateService;
+    private final CertificatePdfGeneratorPort pdfGenerator;
 
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
     public GenerateCertificateUseCase(CertificateRepositoryPort certificateRepository,
-                                     PdfCertificateService pdfCertificateService) {
+                                      CertificatePdfGeneratorPort pdfGenerator) {
         this.certificateRepository = certificateRepository;
-        this.pdfCertificateService = pdfCertificateService;
+        this.pdfGenerator = pdfGenerator;
     }
 
     @Transactional(readOnly = true)
@@ -58,7 +58,7 @@ public class GenerateCertificateUseCase {
             throw new DomainException("FORBIDDEN", "Bạn không có quyền tải chứng chỉ này");
         }
 
-        return pdfCertificateService.generateCertificatePdf(
+        return pdfGenerator.generateCertificatePdf(
                 cert.getCertificateCode(),
                 cert.getStudentName(),
                 cert.getCourseTitle(),
