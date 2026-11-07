@@ -1,0 +1,133 @@
+### ============================================================================
+### BeeAcademy LMS - Commerce, PayOS, Ledger & Payout APIs (Module 5)
+### Base URL: http://localhost:8080
+### ============================================================================
+
+@baseUrl = http://localhost:8080
+@studentToken = eyJhbGciOiJIUzI1NiJ9...
+@teacherToken = eyJhbGciOiJIUzI1NiJ9...
+@adminToken = eyJhbGciOiJIUzI1NiJ9...
+
+### ----------------------------------------------------------------------------
+### 1. Học sinh tạo đơn hàng mua khóa học (UC09)
+### ----------------------------------------------------------------------------
+# @name createOrder
+POST {{baseUrl}}/api/student/orders
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "courseIds": [
+    "e97f0a85-613b-45aa-9c1d-195ee0da4147"
+  ],
+  "voucherCode": null,
+  "paymentMethod": "PAYOS"
+}
+
+### Lưu biến orderId từ phản hồi trên
+@orderId = {{createOrder.response.body.data.orderId}}
+@orderCode = {{createOrder.response.body.data.orderCode}}
+@paymentRef = {{createOrder.response.body.data.paymentRef}}
+
+### ----------------------------------------------------------------------------
+### 2. Học sinh xem danh sách đơn hàng đã tạo (UC11)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/student/orders
+Authorization: Bearer {{studentToken}}
+
+### ----------------------------------------------------------------------------
+### 3. Học sinh xem chi tiết một đơn hàng (UC11)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/student/orders/{{orderId}}
+Authorization: Bearer {{studentToken}}
+
+### ----------------------------------------------------------------------------
+### 4. Giả lập PayOS gọi Webhook báo thanh toán thành công (UC10)
+### Kích hoạt khóa học và chia 80% giáo viên / 20% nền tảng
+### ----------------------------------------------------------------------------
+POST {{baseUrl}}/api/webhooks/payos
+Content-Type: application/json
+
+{
+  "code": "00",
+  "desc": "success",
+  "data": {
+    "orderCode": {{orderCode}},
+    "amount": 300000,
+    "description": "{{paymentRef}}",
+    "accountNumber": "0123456789",
+    "reference": "{{paymentRef}}",
+    "transactionDateTime": "2026-05-01 10:30:00",
+    "currency": "VND",
+    "paymentLinkId": "PAYOS_{{orderCode}}",
+    "code": "00",
+    "desc": "success"
+  },
+  "signature": "simulated_secure_signature"
+}
+
+### ----------------------------------------------------------------------------
+### 5. Giáo viên cập nhật số tài khoản ngân hàng (UC36 - Mã hóa AES-256-GCM)
+### ----------------------------------------------------------------------------
+POST {{baseUrl}}/api/teacher/finance/bank-account
+Content-Type: application/json
+Authorization: Bearer {{teacherToken}}
+
+{
+  "bankName": "Vietcombank",
+  "accountNumber": "0123456789",
+  "accountHolder": "NGUYEN VAN TEACHER",
+  "branch": "Chi nhánh Thăng Long"
+}
+
+### ----------------------------------------------------------------------------
+### 6. Giáo viên xem thông tin tài khoản ngân hàng đã ẩn số (UC36)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/teacher/finance/bank-account
+Authorization: Bearer {{teacherToken}}
+
+### ----------------------------------------------------------------------------
+### 7. Giáo viên xem thống kê doanh thu 80/20 & số tiền chờ chi trả (UC37)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/teacher/finance/statistics
+Authorization: Bearer {{teacherToken}}
+
+### ----------------------------------------------------------------------------
+### 8. Giáo viên xem lịch sử các kỳ quyết toán (UC37)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/teacher/finance/payouts
+Authorization: Bearer {{teacherToken}}
+
+### ----------------------------------------------------------------------------
+### 9. Admin xem danh sách tài khoản ngân hàng đang chờ duyệt
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/admin/finance/bank-accounts/pending
+Authorization: Bearer {{adminToken}}
+
+### ----------------------------------------------------------------------------
+### 10. Admin duyệt tài khoản ngân hàng của giáo viên
+### ----------------------------------------------------------------------------
+@bankAccountId = 11111111-2222-3333-4444-555555555555
+POST {{baseUrl}}/api/admin/finance/bank-accounts/{{bankAccountId}}/verify
+Authorization: Bearer {{adminToken}}
+
+### ----------------------------------------------------------------------------
+### 11. Admin xem danh sách các kỳ quyết toán cần chi trả (UC43)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/admin/finance/payouts?status=PENDING
+Authorization: Bearer {{adminToken}}
+
+### ----------------------------------------------------------------------------
+### 12. Admin xác nhận chi trả chuyển khoản quyết toán (UC43)
+### ----------------------------------------------------------------------------
+@payoutPeriodId = 22222222-3333-4444-5555-666666666666
+POST {{baseUrl}}/api/admin/finance/payouts/{{payoutPeriodId}}/confirm
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "transferRef": "FT20260531998877",
+  "transferContent": "Quyết toán doanh thu khóa học BeeAcademy tháng 05/2026",
+  "uncAttachmentUrl": "https://res.cloudinary.com/hohjixsz/image/upload/v1/unc/unc_sample.pdf"
+}
+
