@@ -17,5 +17,7 @@ public interface SpringDataComplaintRepository extends JpaRepository<ComplaintJp
     List<ComplaintJpaEntity> findByCategoryOrderByLastActivityAtDesc(String category);
 
     List<ComplaintJpaEntity> findAllByOrderByLastActivityAtDesc();
+
+    long countByStatus(String status);
 }
 

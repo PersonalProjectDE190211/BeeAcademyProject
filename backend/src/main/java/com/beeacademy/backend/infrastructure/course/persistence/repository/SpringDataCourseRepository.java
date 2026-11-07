@@ -31,4 +31,6 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
 
     @Query("SELECT c FROM CourseJpaEntity c WHERE c.status = 'published' AND (:categoryId IS NULL OR c.categoryId = :categoryId) ORDER BY c.createdAt DESC")
     List<CourseJpaEntity> findPublishedCourses(@Param("categoryId") UUID categoryId);
+
+    long countByStatus(String status);
 }
