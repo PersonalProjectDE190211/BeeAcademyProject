@@ -1,0 +1,66 @@
+### ============================================================================
+### BeeAcademy LMS - Family Portal & Progress Access Audit APIs (Module 6)
+### Base URL: http://localhost:8080
+### ============================================================================
+
+@baseUrl = http://localhost:8080
+@parentToken = eyJhbGciOiJIUzI1NiJ9...
+@studentToken = eyJhbGciOiJIUzI1NiJ9...
+
+### ----------------------------------------------------------------------------
+### 1. Phụ huynh gửi lời mời liên kết cho con bằng Email (UC27)
+### ----------------------------------------------------------------------------
+# @name inviteStudent
+POST {{baseUrl}}/api/parent/links/invite
+Content-Type: application/json
+Authorization: Bearer {{parentToken}}
+
+{
+  "studentEmail": "student@bee.edu.vn"
+}
+
+### Lưu biến inviteToken và linkId
+@linkId = {{inviteStudent.response.body.data.id}}
+@inviteToken = {{inviteStudent.response.body.data.inviteToken}}
+
+### ----------------------------------------------------------------------------
+### 2. Phụ huynh xem danh sách các mối liên kết với con
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/parent/links
+Authorization: Bearer {{parentToken}}
+
+### ----------------------------------------------------------------------------
+### 3. Học sinh xem danh sách phụ huynh đang liên kết
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/student/family/links
+Authorization: Bearer {{studentToken}}
+
+### ----------------------------------------------------------------------------
+### 4. Học sinh chấp nhận lời mời liên kết bằng mã 6 ký tự (UC28)
+### ----------------------------------------------------------------------------
+POST {{baseUrl}}/api/student/family/links/accept
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "inviteToken": "{{inviteToken}}"
+}
+
+### ----------------------------------------------------------------------------
+### 5. Phụ huynh xem tiến độ học tập của con (UC24 - Có ghi vết Privacy Audit Log)
+### ----------------------------------------------------------------------------
+@studentId = 33333333-4444-5555-6666-777777777777
+GET {{baseUrl}}/api/parent/students/{{studentId}}/progress
+Authorization: Bearer {{parentToken}}
+
+### ----------------------------------------------------------------------------
+### 6. Phụ huynh hoặc Học sinh chủ động hủy liên kết (UC29)
+### ----------------------------------------------------------------------------
+POST {{baseUrl}}/api/parent/links/{{linkId}}/unlink
+Content-Type: application/json
+Authorization: Bearer {{parentToken}}
+
+{
+  "reason": "Phụ huynh xác nhận dừng theo dõi"
+}
+
