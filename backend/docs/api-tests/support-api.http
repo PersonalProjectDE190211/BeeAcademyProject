@@ -1,0 +1,86 @@
+### ============================================================================
+### BeeAcademy LMS - Complaints & Notifications APIs (Module 7)
+### Base URL: http://localhost:8080
+### ============================================================================
+
+@baseUrl = http://localhost:8080
+@studentToken = eyJhbGciOiJIUzI1NiJ9...
+@adminToken = eyJhbGciOiJIUzI1NiJ9...
+
+### ----------------------------------------------------------------------------
+### 1. Người dùng tạo phiếu khiếu nại / yêu cầu hỗ trợ (UC12)
+### ----------------------------------------------------------------------------
+# @name createComplaint
+POST {{baseUrl}}/api/complaints
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+  "title": "Lỗi thanh toán không kích hoạt khóa học",
+  "category": "PAYMENT",
+  "priority": "HIGH",
+  "content": "Tôi đã chuyển khoản qua VietQR thành công lúc 14:00 nhưng khóa học chưa mở."
+}
+
+### Lưu biến complaintId
+@complaintId = {{createComplaint.response.body.data.id}}
+
+### ----------------------------------------------------------------------------
+### 2. Người dùng xem danh sách khiếu nại của mình (UC12)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/complaints/my
+Authorization: Bearer {{studentToken}}
+
+### ----------------------------------------------------------------------------
+### 3. Người dùng xem chi tiết khiếu nại và các tin nhắn trao đổi (UC12)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/complaints/{{complaintId}}
+Authorization: Bearer {{studentToken}}
+
+### ----------------------------------------------------------------------------
+### 4. Admin xem danh sách toàn bộ khiếu nại (UC42)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/admin/complaints?status=OPEN
+Authorization: Bearer {{adminToken}}
+
+### ----------------------------------------------------------------------------
+### 5. Admin gửi tin nhắn trả lời trong khiếu nại (UC42)
+### ----------------------------------------------------------------------------
+POST {{baseUrl}}/api/admin/complaints/{{complaintId}}/messages
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "content": "Chào bạn, ban quản trị đã kiểm tra và thấy mã giao dịch khớp. Khóa học đã được mở kích hoạt."
+}
+
+### ----------------------------------------------------------------------------
+### 6. Admin đánh dấu đã giải quyết khiếu nại (UC42)
+### ----------------------------------------------------------------------------
+POST {{baseUrl}}/api/admin/complaints/{{complaintId}}/resolve
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "resolutionSummary": "Kích hoạt thủ công khóa học và gửi tặng voucher xin lỗi 10%"
+}
+
+### ----------------------------------------------------------------------------
+### 7. Người dùng xem danh sách thông báo (UC44)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/notifications
+Authorization: Bearer {{studentToken}}
+
+### ----------------------------------------------------------------------------
+### 8. Người dùng xem danh sách thông báo chưa đọc (UC44)
+### ----------------------------------------------------------------------------
+GET {{baseUrl}}/api/notifications/unread
+Authorization: Bearer {{studentToken}}
+
+### ----------------------------------------------------------------------------
+### 9. Đánh dấu thông báo đã đọc (UC44)
+### ----------------------------------------------------------------------------
+@notificationId = 44444444-5555-6666-7777-888888888888
+POST {{baseUrl}}/api/notifications/{{notificationId}}/read
+Authorization: Bearer {{studentToken}}
+
