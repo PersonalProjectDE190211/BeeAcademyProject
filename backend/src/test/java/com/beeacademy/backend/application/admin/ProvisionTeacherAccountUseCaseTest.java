@@ -3,16 +3,14 @@ package com.beeacademy.backend.application.admin;
 import com.beeacademy.backend.application.admin.dto.AdminUserDetailDto;
 import com.beeacademy.backend.application.admin.dto.ProvisionTeacherCommand;
 import com.beeacademy.backend.application.admin.usecase.ProvisionTeacherAccountUseCase;
+import com.beeacademy.backend.domain.auth.*;
 import com.beeacademy.backend.domain.common.AuditLog;
 import com.beeacademy.backend.domain.common.AuditLogRepositoryPort;
 import com.beeacademy.backend.domain.common.DomainException;
-import com.beeacademy.backend.infrastructure.auth.persistence.entity.ProfileJpaEntity;
-import com.beeacademy.backend.infrastructure.auth.persistence.repository.SpringDataProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,7 +28,7 @@ import static org.mockito.Mockito.*;
 class ProvisionTeacherAccountUseCaseTest {
 
     @Mock
-    private SpringDataProfileRepository profileRepository;
+    private ProfileRepositoryPort profileRepository;
 
     @Mock
     private AuditLogRepositoryPort auditLogRepository;
@@ -38,64 +36,66 @@ class ProvisionTeacherAccountUseCaseTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
     private ProvisionTeacherAccountUseCase useCase;
 
     private UUID teacherId;
     private UUID adminId;
-    private ProfileJpaEntity teacherEntity;
+    private Profile teacherProfile;
 
     @BeforeEach
     void setUp() {
         teacherId = UUID.randomUUID();
         adminId = UUID.randomUUID();
+        useCase = new ProvisionTeacherAccountUseCase(profileRepository, auditLogRepository, passwordEncoder);
 
-        teacherEntity = new ProfileJpaEntity(
+        teacherProfile = Profile.rehydrate(
                 teacherId,
                 "teacher@bee.edu.vn",
-                "hash",
+                PasswordHash.of("$2a$10$hash"),
+                UserRole.TEACHER,
                 "Thầy Lê Văn Toán",
                 null,
                 null,
                 null,
-                "teacher",
                 null,
-                "active",
-                "pending",
-                true,
-                0,
+                TeacherApprovalStatus.PENDING,
+                false,
                 null,
+                null,
+                false,
+                LoginLockoutState.initial(),
                 Instant.now(),
                 Instant.now()
         );
     }
 
     @Test
-    @DisplayName("approveTeacher phê duyệt tư cách giáo viên và lưu audit log")
+    @DisplayName("approveTeacher phê duyệt tư cách giáo viên qua Domain Profile và lưu audit log")
     void shouldApproveTeacher() {
-        when(profileRepository.findById(teacherId)).thenReturn(Optional.of(teacherEntity));
+        when(profileRepository.findById(teacherId)).thenReturn(Optional.of(teacherProfile));
 
         useCase.approveTeacher(teacherId, adminId);
 
-        assertThat(teacherEntity.getTeacherApprovalStatus()).isEqualTo("approved");
-        verify(profileRepository).save(teacherEntity);
+        assertThat(teacherProfile.getTeacherApprovalStatus()).isEqualTo(TeacherApprovalStatus.APPROVED);
+        assertThat(teacherProfile.getDomainEvents()).isNotEmpty();
+        verify(profileRepository).save(teacherProfile);
         verify(auditLogRepository).save(any(AuditLog.class));
     }
 
     @Test
-    @DisplayName("rejectTeacher từ chối hồ sơ giáo viên")
+    @DisplayName("rejectTeacher từ chối hồ sơ giáo viên qua Domain Profile")
     void shouldRejectTeacher() {
-        when(profileRepository.findById(teacherId)).thenReturn(Optional.of(teacherEntity));
+        when(profileRepository.findById(teacherId)).thenReturn(Optional.of(teacherProfile));
 
         useCase.rejectTeacher(teacherId, "Thiếu chứng chỉ sư phạm", adminId);
 
-        assertThat(teacherEntity.getTeacherApprovalStatus()).isEqualTo("rejected");
-        verify(profileRepository).save(teacherEntity);
+        assertThat(teacherProfile.getTeacherApprovalStatus()).isEqualTo(TeacherApprovalStatus.REJECTED);
+        verify(profileRepository).save(teacherProfile);
         verify(auditLogRepository).save(any(AuditLog.class));
     }
 
     @Test
-    @DisplayName("provisionTeacherAccount tạo tài khoản giáo viên mới với mật khẩu mã hóa")
+    @DisplayName("provisionTeacherAccount tạo tài khoản giáo viên mới qua Profile.createTeacherByAdmin")
     void shouldProvisionTeacherAccount() {
         ProvisionTeacherCommand cmd = new ProvisionTeacherCommand(
                 "newteacher@bee.edu.vn",
@@ -105,8 +105,8 @@ class ProvisionTeacherAccountUseCaseTest {
         );
 
         when(profileRepository.existsByEmail("newteacher@bee.edu.vn")).thenReturn(false);
-        when(passwordEncoder.encode("Temp@123456")).thenReturn("encodedHash123");
-        when(profileRepository.save(any(ProfileJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordEncoder.encode("Temp@123456")).thenReturn("$2a$10$encodedHash123");
+        when(profileRepository.save(any(Profile.class))).thenAnswer(inv -> inv.getArgument(0));
 
         AdminUserDetailDto result = useCase.provisionTeacherAccount(cmd, adminId);
 
@@ -114,7 +114,8 @@ class ProvisionTeacherAccountUseCaseTest {
         assertThat(result.fullName()).isEqualTo("Cô Trần Thị Lý");
         assertThat(result.role()).isEqualTo("TEACHER");
         assertThat(result.teacherApprovalStatus()).isEqualTo("APPROVED");
-        verify(profileRepository).save(any(ProfileJpaEntity.class));
+        assertThat(result.mustChangePassword()).isTrue();
+        verify(profileRepository).save(any(Profile.class));
         verify(auditLogRepository).save(any(AuditLog.class));
     }
 
@@ -134,4 +135,3 @@ class ProvisionTeacherAccountUseCaseTest {
                 .hasMessageContaining("Email này đã được sử dụng");
     }
 }
-

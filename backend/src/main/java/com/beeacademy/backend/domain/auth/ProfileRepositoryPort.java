@@ -1,5 +1,7 @@
 package com.beeacademy.backend.domain.auth;
 
+import com.beeacademy.backend.domain.common.PageResult;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,5 +19,6 @@ public interface ProfileRepositoryPort {
     boolean existsByEmail(String email);
 
     Profile save(Profile profile);
-}
 
+    PageResult<Profile> searchProfiles(String role, String status, String keyword, int page, int size);
+}

@@ -1,10 +1,15 @@
 package com.beeacademy.backend.infrastructure.auth.persistence.adapter;
 
 import com.beeacademy.backend.domain.auth.*;
+import com.beeacademy.backend.domain.common.PageResult;
 import com.beeacademy.backend.infrastructure.auth.persistence.entity.ProfileJpaEntity;
 import com.beeacademy.backend.infrastructure.auth.persistence.repository.SpringDataProfileRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,13 +42,30 @@ public class ProfileRepositoryAdapter implements ProfileRepositoryPort {
 
     @Override
     public Profile save(Profile profile) {
-        ProfileJpaEntity entity = toEntity(profile);
+        Optional<ProfileJpaEntity> existing = repository.findById(profile.getId());
+        boolean emailVerified = existing
+                .map(ProfileJpaEntity::isEmailVerified)
+                .orElse(profile.getTeacherApprovalStatus() == TeacherApprovalStatus.APPROVED);
+        Integer grade = existing.map(ProfileJpaEntity::getGrade).orElse(null);
+
+        ProfileJpaEntity entity = toEntity(profile, grade, emailVerified);
         ProfileJpaEntity saved = repository.save(entity);
         return toDomain(saved);
     }
 
+    @Override
+    public PageResult<Profile> searchProfiles(String role, String status, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
+        Page<ProfileJpaEntity> entityPage = repository.searchProfiles(role, status, keyword, pageable);
+        List<Profile> content = entityPage.getContent().stream()
+                .map(this::toDomain)
+                .toList();
+        return new PageResult<>(content, pageable.getPageNumber(), pageable.getPageSize(), entityPage.getTotalElements());
+    }
+
     private Profile toDomain(ProfileJpaEntity entity) {
-        boolean isBlocked = "locked".equalsIgnoreCase(entity.getStatus()) || "suspended".equalsIgnoreCase(entity.getStatus());
+        boolean isBlocked = "locked".equalsIgnoreCase(entity.getStatus())
+                || "suspended".equalsIgnoreCase(entity.getStatus());
         LoginLockoutState lockoutState = new LoginLockoutState(
                 entity.getFailedLoginAttempts(),
                 null,
@@ -59,11 +81,11 @@ public class ProfileRepositoryAdapter implements ProfileRepositoryPort {
                 entity.getAvatarUrl(),
                 entity.getPhone(),
                 entity.getBio(),
-                null, // dateOfBirth
+                null,
                 TeacherApprovalStatus.fromDbValue(entity.getTeacherApprovalStatus()),
-                false, // mustChangePassword
-                null,  // createdByAdminId
-                null,  // teacherContactNote
+                false,
+                null,
+                null,
                 isBlocked,
                 lockoutState,
                 entity.getCreatedAt(),
@@ -71,7 +93,7 @@ public class ProfileRepositoryAdapter implements ProfileRepositoryPort {
         );
     }
 
-    private ProfileJpaEntity toEntity(Profile domain) {
+    private ProfileJpaEntity toEntity(Profile domain, Integer grade, boolean emailVerified) {
         String status = domain.isBlocked() ? "locked" : "active";
         int failedAttempts = domain.getLockoutState() != null ? domain.getLockoutState().failedAttempts() : 0;
         var lockedUntil = domain.getLockoutState() != null ? domain.getLockoutState().lockedUntil() : null;
@@ -85,10 +107,12 @@ public class ProfileRepositoryAdapter implements ProfileRepositoryPort {
                 domain.getPhone(),
                 domain.getBio(),
                 domain.getRole().getDbValue(),
-                null, // grade
+                grade,
                 status,
-                domain.getTeacherApprovalStatus() != null ? domain.getTeacherApprovalStatus().name().toLowerCase() : "none",
-                false, // emailVerified
+                domain.getTeacherApprovalStatus() != null
+                        ? domain.getTeacherApprovalStatus().name().toLowerCase()
+                        : "none",
+                emailVerified,
                 failedAttempts,
                 lockedUntil,
                 domain.getCreatedAt(),

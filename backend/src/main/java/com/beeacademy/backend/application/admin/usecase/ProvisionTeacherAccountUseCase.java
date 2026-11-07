@@ -2,47 +2,58 @@ package com.beeacademy.backend.application.admin.usecase;
 
 import com.beeacademy.backend.application.admin.dto.AdminUserDetailDto;
 import com.beeacademy.backend.application.admin.dto.ProvisionTeacherCommand;
+import com.beeacademy.backend.domain.auth.PasswordHash;
+import com.beeacademy.backend.domain.auth.Profile;
+import com.beeacademy.backend.domain.auth.ProfileRepositoryPort;
 import com.beeacademy.backend.domain.common.AuditEntityType;
 import com.beeacademy.backend.domain.common.AuditLog;
 import com.beeacademy.backend.domain.common.AuditLogRepositoryPort;
 import com.beeacademy.backend.domain.common.DomainException;
-import com.beeacademy.backend.infrastructure.auth.persistence.entity.ProfileJpaEntity;
-import com.beeacademy.backend.infrastructure.auth.persistence.repository.SpringDataProfileRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class ProvisionTeacherAccountUseCase {
 
-    private final SpringDataProfileRepository profileRepository;
+    private final ProfileRepositoryPort profileRepository;
     private final AuditLogRepositoryPort auditLogRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ObjectMapper objectMapper;
 
+    @Autowired
     public ProvisionTeacherAccountUseCase(
-            SpringDataProfileRepository profileRepository,
+            ProfileRepositoryPort profileRepository,
             AuditLogRepositoryPort auditLogRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            ObjectMapper objectMapper
     ) {
         this.profileRepository = profileRepository;
         this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
+        this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+    }
+
+    public ProvisionTeacherAccountUseCase(
+            ProfileRepositoryPort profileRepository,
+            AuditLogRepositoryPort auditLogRepository,
+            PasswordEncoder passwordEncoder
+    ) {
+        this(profileRepository, auditLogRepository, passwordEncoder, new ObjectMapper());
     }
 
     @Transactional
     public void approveTeacher(UUID teacherId, UUID adminId) {
-        ProfileJpaEntity user = profileRepository.findById(teacherId)
+        Profile user = profileRepository.findById(teacherId)
                 .orElseThrow(() -> new DomainException("USER_NOT_FOUND", "Không tìm thấy người dùng"));
 
-        if (!"teacher".equalsIgnoreCase(user.getRole())) {
-            throw new DomainException("INVALID_ROLE", "Chỉ tài khoản giáo viên mới có thể phê duyệt tư cách giảng dạy");
-        }
-
-        user.setTeacherApprovalStatus("approved");
-        user.setUpdatedAt(Instant.now());
+        user.approveTeacher(adminId);
         profileRepository.save(user);
 
         AuditLog audit = AuditLog.record(
@@ -59,11 +70,10 @@ public class ProvisionTeacherAccountUseCase {
 
     @Transactional
     public void rejectTeacher(UUID teacherId, String reason, UUID adminId) {
-        ProfileJpaEntity user = profileRepository.findById(teacherId)
+        Profile user = profileRepository.findById(teacherId)
                 .orElseThrow(() -> new DomainException("USER_NOT_FOUND", "Không tìm thấy người dùng"));
 
-        user.setTeacherApprovalStatus("rejected");
-        user.setUpdatedAt(Instant.now());
+        user.rejectTeacher();
         profileRepository.save(user);
 
         AuditLog audit = AuditLog.record(
@@ -72,7 +82,7 @@ public class ProvisionTeacherAccountUseCase {
                 "TEACHER_REJECTION",
                 adminId,
                 "ADMIN",
-                reason != null ? reason.trim() : "Từ chối hồ sơ giáo viên",
+                reason != null && !reason.isBlank() ? reason.trim() : "Từ chối hồ sơ giáo viên",
                 "{\"teacherApprovalStatus\":\"rejected\"}"
         );
         auditLogRepository.save(audit);
@@ -96,26 +106,17 @@ public class ProvisionTeacherAccountUseCase {
         }
 
         UUID teacherId = UUID.randomUUID();
-        ProfileJpaEntity entity = new ProfileJpaEntity(
+        PasswordHash tempPasswordHash = PasswordHash.of(passwordEncoder.encode(command.temporaryPassword()));
+        Profile teacher = Profile.createTeacherByAdmin(
                 teacherId,
                 email,
-                passwordEncoder.encode(command.temporaryPassword()),
+                tempPasswordHash,
                 command.fullName().trim(),
-                null,
-                null,
-                null,
-                "teacher",
-                null,
-                "active",
-                "approved",
-                true,
-                0,
-                null,
-                Instant.now(),
-                Instant.now()
+                adminId,
+                command.contactNote()
         );
 
-        ProfileJpaEntity saved = profileRepository.save(entity);
+        Profile saved = profileRepository.save(teacher);
 
         AuditLog audit = AuditLog.record(
                 AuditEntityType.USER_ACCOUNT,
@@ -123,8 +124,10 @@ public class ProvisionTeacherAccountUseCase {
                 "PROVISION_TEACHER",
                 adminId,
                 "ADMIN",
-                command.contactNote() != null ? command.contactNote().trim() : "Cấp tài khoản giáo viên trực tiếp bởi Admin",
-                "{\"email\":\"" + email + "\"}"
+                command.contactNote() != null && !command.contactNote().isBlank()
+                        ? command.contactNote().trim()
+                        : "Cấp tài khoản giáo viên trực tiếp bởi Admin",
+                toJson(Map.of("email", email))
         );
         auditLogRepository.save(audit);
 
@@ -135,18 +138,26 @@ public class ProvisionTeacherAccountUseCase {
                 saved.getAvatarUrl(),
                 saved.getPhone(),
                 saved.getBio(),
+                saved.getDateOfBirth(),
+                saved.getRole().name(),
+                saved.isBlocked() ? "LOCKED" : "ACTIVE",
+                saved.getTeacherApprovalStatus().name(),
+                true,
+                0,
                 null,
-                saved.getRole().toUpperCase(),
-                saved.getStatus().toUpperCase(),
-                saved.getTeacherApprovalStatus().toUpperCase(),
-                saved.isEmailVerified(),
-                saved.getFailedLoginAttempts(),
-                saved.getLockedUntil(),
                 true,
                 adminId,
                 command.contactNote(),
                 saved.getCreatedAt(),
                 saved.getUpdatedAt()
         );
+    }
+
+    private String toJson(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            return "{}";
+        }
     }
 }
