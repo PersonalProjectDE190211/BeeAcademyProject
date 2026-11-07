@@ -23,12 +23,7 @@ public class PublicSystemController {
     @GetMapping("/maintenance")
     @Operation(summary = "Kiểm tra hệ thống có đang ở chế độ bảo trì hay không")
     public ApiResponse<MaintenanceStatusResponse> checkMaintenanceStatus() {
-        boolean enabled = manageSystemSettingsUseCase.isMaintenanceModeEnabled();
-        String message = enabled
-                ? "Hệ thống BeeAcademy đang bảo trì nâng cấp định kỳ. Vui lòng quay lại sau!"
-                : "Hệ thống hoạt động bình thường";
-
-        return ApiResponse.success(new MaintenanceStatusResponse(enabled, message));
+        ManageSystemSettingsUseCase.MaintenanceStatus status = manageSystemSettingsUseCase.getMaintenanceStatus();
+        return ApiResponse.success(new MaintenanceStatusResponse(status.enabled(), status.message()));
     }
 }
-

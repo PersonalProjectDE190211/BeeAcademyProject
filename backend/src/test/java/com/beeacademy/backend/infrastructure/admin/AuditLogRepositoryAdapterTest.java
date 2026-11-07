@@ -2,6 +2,8 @@ package com.beeacademy.backend.infrastructure.admin;
 
 import com.beeacademy.backend.domain.common.AuditEntityType;
 import com.beeacademy.backend.domain.common.AuditLog;
+import com.beeacademy.backend.domain.common.DomainException;
+import com.beeacademy.backend.domain.common.PageResult;
 import com.beeacademy.backend.infrastructure.admin.persistence.adapter.AuditLogRepositoryAdapter;
 import com.beeacademy.backend.infrastructure.admin.persistence.entity.AuditLogJpaEntity;
 import com.beeacademy.backend.infrastructure.admin.persistence.repository.SpringDataAuditLogRepository;
@@ -12,12 +14,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -97,6 +102,29 @@ class AuditLogRepositoryAdapterTest {
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getActorId()).isEqualTo(actorId);
+    }
+
+    @Test
+    @DisplayName("findPaged trả về PageResult phân trang")
+    void shouldFindPaged() {
+        when(repository.findByEntityTypeOrderByCreatedAtDesc(eq("USER_ACCOUNT"), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(entity), PageRequest.of(0, 10), 1));
+
+        PageResult<AuditLog> pageResult = adapter.findPaged(AuditEntityType.USER_ACCOUNT, 0, 10);
+
+        assertThat(pageResult.totalElements()).isEqualTo(1);
+        assertThat(pageResult.content()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("toDomain ném DomainException khi entityType trong DB không hợp lệ")
+    void shouldThrowOnUnknownEntityType() {
+        entity.setEntityType("UNKNOWN_TYPE");
+        when(repository.findByActorIdOrderByCreatedAtDesc(actorId)).thenReturn(List.of(entity));
+
+        assertThatThrownBy(() -> adapter.findByActorId(actorId))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining("UNKNOWN_TYPE");
     }
 }
 

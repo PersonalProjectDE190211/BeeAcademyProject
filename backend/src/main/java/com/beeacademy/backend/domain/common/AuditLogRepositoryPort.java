@@ -10,4 +10,6 @@ public interface AuditLogRepositoryPort {
     List<AuditLog> findByEntity(AuditEntityType entityType, UUID entityId);
 
     List<AuditLog> findByActorId(UUID actorId);
+
+    PageResult<AuditLog> findPaged(AuditEntityType entityType, int page, int size);
 }

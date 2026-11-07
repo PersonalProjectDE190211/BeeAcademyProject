@@ -32,9 +32,13 @@ class PublicSystemControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/public/system/maintenance trả về trạng thái bảo trì khi đang bảo trì")
+    @DisplayName("GET /api/public/system/maintenance trả về trạng thái bảo trì và message cấu hình từ DB")
     void shouldReturnMaintenanceTrue() throws Exception {
-        when(manageSystemSettingsUseCase.isMaintenanceModeEnabled()).thenReturn(true);
+        when(manageSystemSettingsUseCase.getMaintenanceStatus())
+                .thenReturn(new ManageSystemSettingsUseCase.MaintenanceStatus(
+                        true,
+                        "Hệ thống BeeAcademy đang bảo trì nâng cấp định kỳ. Vui lòng quay lại sau!"
+                ));
 
         mockMvc.perform(get("/api/public/system/maintenance")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -47,7 +51,8 @@ class PublicSystemControllerTest {
     @Test
     @DisplayName("GET /api/public/system/maintenance trả về trạng thái bình thường khi không bảo trì")
     void shouldReturnMaintenanceFalse() throws Exception {
-        when(manageSystemSettingsUseCase.isMaintenanceModeEnabled()).thenReturn(false);
+        when(manageSystemSettingsUseCase.getMaintenanceStatus())
+                .thenReturn(new ManageSystemSettingsUseCase.MaintenanceStatus(false, "Hệ thống hoạt động bình thường"));
 
         mockMvc.perform(get("/api/public/system/maintenance")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -57,4 +62,3 @@ class PublicSystemControllerTest {
                 .andExpect(jsonPath("$.data.message").value("Hệ thống hoạt động bình thường"));
     }
 }
-
