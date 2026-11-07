@@ -1,0 +1,98 @@
+### BeeAcademy - Phân hệ Quản trị Hệ thống (Admin & System Operations - Module 8)
+@baseUrl = http://localhost:8080/api
+@adminToken = your_admin_jwt_token_here
+@targetUserId = 11111111-1111-1111-1111-111111111111
+
+### 1. Kiểm tra trạng thái bảo trì hệ thống (Public - No Token required)
+GET {{baseUrl}}/public/system/maintenance
+Accept: application/json
+
+### 2. Xem số liệu thống kê Dashboard Quản trị (UC38)
+GET {{baseUrl}}/admin/dashboard/summary
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 3. Tìm kiếm và phân trang danh sách người dùng (UC39)
+GET {{baseUrl}}/admin/users?keyword=toan&role=teacher&status=active&page=0&size=10
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 4. Xem chi tiết thông tin một người dùng
+GET {{baseUrl}}/admin/users/{{targetUserId}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 5. Khóa tài khoản người dùng (UC40)
+POST {{baseUrl}}/admin/users/{{targetUserId}}/lock
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "reason": "Phát hiện hành vi gian lận bài thi hoặc vi phạm tiêu chuẩn cộng đồng"
+}
+
+### 6. Mở khóa tài khoản người dùng (UC40)
+POST {{baseUrl}}/admin/users/{{targetUserId}}/unlock
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "reason": "Đã hoàn tất xác minh danh tính và giải trình khiếu nại"
+}
+
+### 7. Phê duyệt hồ sơ đăng ký giảng dạy của Giáo viên
+POST {{baseUrl}}/admin/users/{{targetUserId}}/approve-teacher
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 8. Từ chối hồ sơ đăng ký giảng dạy của Giáo viên
+POST {{baseUrl}}/admin/users/{{targetUserId}}/reject-teacher
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "reason": "Hồ sơ đính kèm thiếu chứng chỉ sư phạm hoặc bằng cấp chuyên ngành liên quan"
+}
+
+### 9. Cấp mới tài khoản Giáo viên trực tiếp từ Ban Quản trị (SRS V046 / UC04)
+POST {{baseUrl}}/admin/users/provision-teacher
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "teacher.nguyen@bee.edu.vn",
+  "temporaryPassword": "TempPassword@2026",
+  "fullName": "Thầy Nguyễn Hữu Hùng",
+  "contactNote": "Giáo viên chuyên Toán Olympic được tuyển dụng qua đợt sát hạch tháng 11"
+}
+
+### 10. Xem toàn bộ danh sách cấu hình hệ thống
+GET {{baseUrl}}/admin/settings
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 11. Bật hoặc tắt chế độ bảo trì toàn hệ thống
+POST {{baseUrl}}/admin/settings/maintenance
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "enabled": true,
+  "message": "BeeAcademy đang bảo trì nâng cấp cơ sở dữ liệu định kỳ từ 00:00 đến 02:00. Vui lòng quay lại sau!"
+}
+
+### 12. Cập nhật một tham số cấu hình hệ thống
+PUT {{baseUrl}}/admin/settings/revenue_split_policy
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "value": "{\"platformFeeRate\": 18.0, \"teacherShareRate\": 82.0}",
+  "reason": "Chính sách ưu đãi tri ân nhà giáo tháng 11: Tăng tỷ lệ chia sẻ lên 82%"
+}
+
+### 13. Xem danh sách nhật ký kiểm toán tập trung (Centralized Audit Logs)
+GET {{baseUrl}}/admin/settings/audit-logs?entityType=USER_ACCOUNT&page=0&size=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
