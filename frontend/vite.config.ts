@@ -12,13 +12,19 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       },
     },
     server: {
       port: 3000,
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      proxy: {
+        '/api': {
+          target: env.VITE_API_BASE_URL || 'http://localhost:8080',
+          changeOrigin: true,
+        },
+      },
     },
     build: {
       rollupOptions: {
@@ -28,19 +34,6 @@ export default defineConfig(({mode}) => {
             'vendor-ui': ['motion/react', 'lucide-react'],
             'vendor-utils': ['axios', 'zustand'],
             'vendor-charts': ['recharts'],
-            'pages-admin': [
-              './src/pages/admin/DashboardAdmin',
-              './src/pages/admin/ApprovalsPage',
-              './src/pages/admin/CourseReviewPage',
-              './src/pages/admin/AdminReportsPage',
-            ],
-            'pages-teacher': [
-              './src/pages/teacher/CoursesPage',
-              './src/pages/teacher/QuestionBankPage',
-              './src/pages/teacher/QuizPage',
-              './src/pages/teacher/RevenuePage',
-              './src/pages/teacher/BankPage',
-            ],
           },
         },
       },
