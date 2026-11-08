@@ -79,12 +79,12 @@ export const CourseDetailPage: React.FC = () => {
         toast.success('Ghi danh khóa học miễn phí thành công!');
         navigate(`/learning/courses/${course.id}`);
       } else {
-        const res = await httpClient.post<ApiResponse<{ id: string }>>('/orders', {
-          courseId: course.id,
-          studentId: user.id,
+        const res = await httpClient.post<ApiResponse<{ orderId: string }>>('/student/orders', {
+          courseIds: [course.id],
+          paymentMethod: 'PAYOS',
         });
         toast.success('Đã khởi tạo đơn hàng thanh toán khóa học!');
-        navigate(`/orders?highlight=${res.data.data.id}`);
+        navigate(`/orders?highlight=${res.data.data.orderId}`);
       }
     } catch (err) {
       toast.error(getApiErrorMessage(err, 'Không thể xử lý đăng ký khóa học.'));
