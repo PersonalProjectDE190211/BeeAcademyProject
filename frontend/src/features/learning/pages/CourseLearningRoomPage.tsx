@@ -180,10 +180,10 @@ export const CourseLearningRoomPage: React.FC = () => {
           </p>
         </div>
         {activeLesson && (
-          <Link to={`/learning/lessons/${activeLesson.lessonId}/quiz`}>
+          <Link to={`/learning/chapters/${activeLesson.chapterId}/quiz`}>
             <Button variant="secondary" size="sm">
               <ClipboardCheck className="h-4 w-4" />
-              Làm bài Kiểm tra (Quiz) của bài học này
+              Làm bài Kiểm tra (Quiz) của chương này
             </Button>
           </Link>
         )}
