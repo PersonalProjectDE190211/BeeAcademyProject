@@ -93,7 +93,7 @@ app:
   dev-mode: ${DEV_MODE:false}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   google:
-    client-id: ${GOOGLE_CLIENT_ID:562390685704-rjeobo36tnkofkl5og205g225618j6fv.apps.googleusercontent.com}
+    client-id: ${GOOGLE_CLIENT_ID:562390685704-gn1134f6gql8dcfianuspf859q3tmvmm.apps.googleusercontent.com}
   certificate:
     # Đường dẫn tới file .ttf Unicode để in chứng chỉ. Để trống thì hệ thống tự dò
     # font hệ điều hành; không tìm thấy font nào thì tên tiếng Việt sẽ bị bỏ dấu.
