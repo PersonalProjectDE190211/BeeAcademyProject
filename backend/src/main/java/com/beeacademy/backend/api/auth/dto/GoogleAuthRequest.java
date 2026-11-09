@@ -12,3 +12,4 @@ public record GoogleAuthRequest(
         @Schema(description = "Loại tài khoản mong muốn khi tạo mới: 'student' (mặc định) hoặc 'parent'", example = "student")
         String accountType
 ) {}
+

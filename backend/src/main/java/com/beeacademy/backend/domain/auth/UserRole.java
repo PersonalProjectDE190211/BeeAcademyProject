@@ -1,6 +1,8 @@
 package com.beeacademy.backend.domain.auth;
 
 import com.beeacademy.backend.domain.common.DomainException;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * Vai trò người dùng trong hệ sinh thái Bee Academy.
@@ -18,6 +20,7 @@ public enum UserRole {
         this.dbValue = dbValue;
     }
 
+    @JsonValue
     public String getDbValue() {
         return dbValue;
     }
@@ -38,9 +41,10 @@ public enum UserRole {
         return this == ADMIN;
     }
 
+    @JsonCreator
     public static UserRole fromDbValue(String value) {
         if (value == null || value.isBlank()) {
-            throw new DomainException("INVALID_ROLE", "Vai trò không được để trống");
+            return null;
         }
         for (UserRole role : values()) {
             if (role.dbValue.equalsIgnoreCase(value.trim()) || role.name().equalsIgnoreCase(value.trim())) {

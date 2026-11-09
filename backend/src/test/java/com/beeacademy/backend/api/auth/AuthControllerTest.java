@@ -163,6 +163,50 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/auth/register - Chấp nhận cả role chữ thường 'student' và chữ hoa 'STUDENT'")
+    void testRegisterAcceptsCaseInsensitiveRole() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserProfileResult user = new UserProfileResult(
+                userId, "lowercase@beeacademy.edu.vn", "student", "Hoc Sinh A",
+                null, null, null, "none", false, Instant.now()
+        );
+        when(registerUserUseCase.execute(any())).thenReturn(user);
+
+        // Gửi role chữ thường "student"
+        String lowerCaseJson = """
+                {
+                    "email": "lowercase@beeacademy.edu.vn",
+                    "password": "Password@123",
+                    "fullName": "Hoc Sinh A",
+                    "role": "student"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(lowerCaseJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.email").value("lowercase@beeacademy.edu.vn"));
+
+        // Gửi role chữ hoa "STUDENT"
+        String upperCaseJson = """
+                {
+                    "email": "lowercase@beeacademy.edu.vn",
+                    "password": "Password@123",
+                    "fullName": "Hoc Sinh A",
+                    "role": "STUDENT"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(upperCaseJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
     @DisplayName("POST /api/auth/register - Kiểm tra Validation: Bắt lỗi nếu email sai định dạng hoặc mật khẩu < 6 ký tự")
     void testRegisterValidationErrors() throws Exception {
         String invalidRequestJson = """

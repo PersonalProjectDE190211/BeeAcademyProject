@@ -10,7 +10,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   fullName: string;
-  role: 'STUDENT' | 'PARENT';
+  role: 'STUDENT' | 'PARENT' | 'student' | 'parent';
 }
 
 export interface GoogleAuthPayload {
