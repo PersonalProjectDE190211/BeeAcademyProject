@@ -40,13 +40,15 @@ export default function App() {
         }}
       />
       <Routes>
+        {/* Dedicated Auth Routes (UC01, UC02) - Full-screen Split Layout */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
         <Route element={<AppShell />}>
           <Route index element={<Navigate to="/courses" replace />} />
 
-          {/* Public & Auth Routes (UC01 - UC08) */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          {/* Public Course Catalog (UC06, UC07, UC08) */}
           <Route path="/courses" element={<CatalogPage />} />
           <Route path="/courses/:courseId" element={<CourseDetailPage />} />
 

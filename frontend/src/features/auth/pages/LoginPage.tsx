@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { GraduationCap, Lock, Mail } from 'lucide-react';
 import { authApi } from '../api/authApi';
+import { AuthLeftBanner } from '../components/AuthLeftBanner';
 import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { useAuthStore } from '@/shared/store/useAuthStore';
 import { getApiErrorMessage } from '@/shared/types/api';
-import { Button, Card, Input } from '@/shared/ui/primitives';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,89 +51,119 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto flex min-h-[75vh] max-w-md flex-col justify-center py-8">
-      <div className="mb-6 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-sm">
-          <GraduationCap className="h-7 w-7" />
-        </div>
-        <h1 className="text-2xl font-bold text-slate-900">Đăng nhập BeeAcademy</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Nền tảng học trực tuyến & Luyện thi Phổ thông K-12
-        </p>
-      </div>
-
-      <Card className="p-6 sm:p-8">
-        {errorMessage && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessage}
-          </div>
-        )}
-
-        <GoogleSignInButton mode="signin" className="mb-5" />
-
-        <div className="relative mb-5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-3 text-slate-500 font-medium">Hoặc tiếp tục với email</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Địa chỉ Email"
-            type="email"
-            placeholder="hocsinh@beeacademy.edu.vn"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
+    <div className="min-h-screen bg-white">
+      <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
+        {/* Left Column: Branded Terracotta Banner */}
+        <div className="lg:col-span-5 xl:col-span-5">
+          <AuthLeftBanner
+            title={'Học tập vui hơn,\ntiến bộ mỗi ngày'}
+            subtitle="Nền tảng học tập trực tuyến K-12 với bài giảng, bài kiểm tra và theo dõi tiến độ dành cho học sinh và phụ huynh."
           />
+        </div>
 
-          <div>
-            <Input
-              label="Mật khẩu"
-              type="password"
-              placeholder="Nhập mật khẩu của bạn"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-            <div className="mt-1.5 flex justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-xs font-medium text-amber-600 hover:text-amber-700"
-              >
-                Quên mật khẩu?
-              </Link>
+        {/* Right Column: Login Form */}
+        <div className="lg:col-span-7 xl:col-span-7 flex flex-col justify-center px-6 py-10 sm:px-12 lg:px-16 xl:px-24">
+          <div className="mx-auto w-full max-w-md">
+            {/* Form Title & Subtitle */}
+            <div className="mb-6">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Đăng nhập
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Chưa có tài khoản?{' '}
+                <Link to="/register" className="font-semibold text-[#b8320c] hover:underline">
+                  Đăng ký ngay
+                </Link>
+              </p>
             </div>
+
+            {/* Google Sign-in Button */}
+            <GoogleSignInButton
+              mode="signin"
+              text="Tiếp tục với Google"
+              className="mb-5"
+            />
+
+            {/* Divider: hoặc dùng email */}
+            <div className="relative mb-5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-3 text-slate-400">hoặc dùng email</span>
+              </div>
+            </div>
+
+            {/* Error Message Alert */}
+            {errorMessage && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs sm:text-sm text-red-700">
+                {errorMessage}
+              </div>
+            )}
+
+            {/* Login Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="ten@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#b8320c] focus:outline-hidden focus:ring-1 focus:ring-[#b8320c]"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Mật khẩu
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-[#b8320c] hover:underline"
+                  >
+                    Quên mật khẩu?
+                  </Link>
+                </div>
+                <input
+                  type="password"
+                  placeholder="Nhập mật khẩu"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#b8320c] focus:outline-hidden focus:ring-1 focus:ring-[#b8320c]"
+                />
+              </div>
+
+              {/* Submit button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-xl bg-[#b8320c] hover:bg-[#a12b0a] text-white font-bold py-3 text-sm transition shadow-sm cursor-pointer disabled:opacity-60 mt-2"
+              >
+                {loading ? 'Đang đăng nhập...' : 'Đăng nhập hệ thống'}
+              </button>
+            </form>
+
+            {/* Teacher note footer */}
+            <p className="mt-8 text-center text-xs text-slate-500 leading-relaxed">
+              Bạn là giáo viên? Tài khoản giáo viên được cấp sau khi duyệt hồ sơ. Gửi hồ sơ đến{' '}
+              <a
+                href="mailto:admin@beeacademy.edu.vn"
+                className="font-medium text-[#b8320c] underline hover:text-[#9c2909]"
+              >
+                admin@beeacademy.edu.vn
+              </a>.
+            </p>
           </div>
-
-          <Button type="submit" loading={loading} className="w-full" size="lg">
-            <Lock className="h-4 w-4" />
-            Đăng nhập hệ thống
-          </Button>
-        </form>
-
-        <div className="mt-6 border-t border-slate-100 pt-5 text-center text-sm text-slate-600">
-          Chưa có tài khoản BeeAcademy?{' '}
-          <Link to="/register" className="font-semibold text-amber-600 hover:text-amber-700">
-            Đăng ký ngay
-          </Link>
         </div>
-
-        <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-500">
-          <div className="flex items-center gap-1.5 font-medium text-slate-700">
-            <Mail className="h-3.5 w-3.5 text-amber-500" />
-            Bảo mật phiên đăng nhập
-          </div>
-          <p className="mt-1">
-            Hệ thống bảo vệ tài khoản tự động khóa tạm thời 15 phút nếu nhập sai mật khẩu quá 5 lần liên tiếp.
-          </p>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 };
