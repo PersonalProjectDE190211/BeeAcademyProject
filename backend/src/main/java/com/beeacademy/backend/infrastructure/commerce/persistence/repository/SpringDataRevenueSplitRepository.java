@@ -1,3 +1,4 @@
+
 package com.beeacademy.backend.infrastructure.commerce.persistence.repository;
 
 import com.beeacademy.backend.infrastructure.commerce.persistence.entity.RevenueSplitJpaEntity;
@@ -22,7 +23,7 @@ public interface SpringDataRevenueSplitRepository extends JpaRepository<RevenueS
     @Query("SELECT COALESCE(SUM(r.grossAmount), 0) FROM RevenueSplitJpaEntity r")
     long sumTotalGrossAmount();
 
-    @Query("SELECT COALESCE(SUM(r.platformFeeAmount), 0) FROM RevenueSplitJpaEntity r")
+    @Query("SELECT COALESCE(SUM(r.platformFee), 0) FROM RevenueSplitJpaEntity r")
     long sumTotalPlatformFee();
 
     @Query("SELECT COALESCE(SUM(r.teacherAmount), 0) FROM RevenueSplitJpaEntity r")
