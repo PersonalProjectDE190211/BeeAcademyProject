@@ -33,6 +33,19 @@ Content-Type: application/json
   "password": "{{testPassword}}"
 }
 
+### ------------------------------------------------------------------------------
+### 2b. UC02-Google: Đăng nhập / Đăng ký nhanh bằng Google OAuth2 ID Token
+### Mock token cú pháp: mock_google_token:<sub-id>:<email>:<email_verified:true|false>:<full_name>
+### ------------------------------------------------------------------------------
+# @name googleLoginRequest
+POST {{baseUrl}}/auth/google
+Content-Type: application/json
+
+{
+  "idToken": "mock_google_token:google_sub_1092837465:student.google@gmail.com:true:Nguyen Van Google",
+  "accountType": "student"
+}
+
 ### Lấy Access Token từ phản hồi đăng nhập
 @accessToken = {{loginRequest.response.body.data.accessToken}}
 

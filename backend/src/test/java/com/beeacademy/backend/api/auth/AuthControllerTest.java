@@ -43,6 +43,9 @@ class AuthControllerTest {
     private AuthenticateUserUseCase authenticateUserUseCase;
 
     @Mock
+    private AuthenticateWithGoogleUseCase authenticateWithGoogleUseCase;
+
+    @Mock
     private RefreshTokenUseCase refreshTokenUseCase;
 
     @Mock
@@ -178,6 +181,70 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
                 .andExpect(jsonPath("$.fieldErrors").isArray());
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/google - Đăng nhập Google thành công trả về AccessToken trong Body và RefreshToken trong HttpOnly Cookie")
+    void testGoogleLoginSuccess() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserProfileResult user = new UserProfileResult(
+                userId,
+                "googleuser@gmail.com",
+                "student",
+                "Google Student",
+                "https://lh3.googleusercontent.com/photo.jpg",
+                null,
+                null,
+                "none",
+                false,
+                Instant.now()
+        );
+
+        AuthTokenResult tokenResult = new AuthTokenResult(
+                "jwt.google.access.token",
+                "raw_google_refresh_token",
+                user
+        );
+
+        when(authenticateWithGoogleUseCase.execute(any())).thenReturn(tokenResult);
+
+        String googleAuthJson = """
+                {
+                    "idToken": "valid-google-id-token-xyz",
+                    "accountType": "student"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(googleAuthJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("jwt.google.access.token"))
+                .andExpect(jsonPath("$.data.user.email").value("googleuser@gmail.com"))
+                .andExpect(header().exists(HttpHeaders.SET_COOKIE))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=raw_google_refresh_token")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=Strict")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Path=/api/auth")));
+    }
+
+    @Test
+    @DisplayName("POST /api/auth/google - Bắt lỗi validation nếu idToken để trống")
+    void testGoogleLoginValidationBlankToken() throws Exception {
+        String invalidJson = """
+                {
+                    "idToken": "",
+                    "accountType": "student"
+                }
+                """;
+
+        mockMvc.perform(post("/api/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
     }
 }
 

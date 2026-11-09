@@ -31,6 +31,7 @@ public class AuthController {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final AuthenticateUserUseCase authenticateUserUseCase;
+    private final AuthenticateWithGoogleUseCase authenticateWithGoogleUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final LogoutUseCase logoutUseCase;
     private final ForgotPasswordUseCase forgotPasswordUseCase;
@@ -41,12 +42,14 @@ public class AuthController {
 
     public AuthController(RegisterUserUseCase registerUserUseCase,
                           AuthenticateUserUseCase authenticateUserUseCase,
+                          AuthenticateWithGoogleUseCase authenticateWithGoogleUseCase,
                           RefreshTokenUseCase refreshTokenUseCase,
                           LogoutUseCase logoutUseCase,
                           ForgotPasswordUseCase forgotPasswordUseCase,
                           ResetPasswordUseCase resetPasswordUseCase) {
         this.registerUserUseCase = registerUserUseCase;
         this.authenticateUserUseCase = authenticateUserUseCase;
+        this.authenticateWithGoogleUseCase = authenticateWithGoogleUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
         this.logoutUseCase = logoutUseCase;
         this.forgotPasswordUseCase = forgotPasswordUseCase;
@@ -94,6 +97,26 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(ApiResponse.success("Đăng nhập thành công", responseData));
+    }
+
+    /**
+     * UC02-Google: Đăng nhập hoặc đăng ký nhanh bằng Google OAuth2 ID Token.
+     * Cấp Access Token trong body và Refresh Token trong HttpOnly Cookie (SameSite=Strict, Path=/api/auth).
+     */
+    @Operation(summary = "Đăng nhập hoặc đăng ký bằng Google ID Token", description = "Xác thực token Google, định danh sub qua ExternalLogin, cấp JWT Access Token và HttpOnly Refresh Token")
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponseData>> loginWithGoogle(
+            @Valid @RequestBody GoogleAuthRequest request
+    ) {
+        GoogleAuthCommand command = new GoogleAuthCommand(request.idToken(), request.accountType());
+        AuthTokenResult tokenResult = authenticateWithGoogleUseCase.execute(command);
+
+        ResponseCookie cookie = buildRefreshTokenCookie(tokenResult.refreshToken(), REFRESH_COOKIE_MAX_AGE);
+        AuthResponseData responseData = new AuthResponseData(tokenResult.accessToken(), tokenResult.user());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.success("Đăng nhập bằng Google thành công", responseData));
     }
 
     /**
