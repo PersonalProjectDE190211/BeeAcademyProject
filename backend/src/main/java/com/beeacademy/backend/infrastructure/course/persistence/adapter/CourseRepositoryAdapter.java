@@ -7,14 +7,13 @@ import com.beeacademy.backend.infrastructure.course.persistence.entity.ChapterJp
 import com.beeacademy.backend.infrastructure.course.persistence.entity.CourseJpaEntity;
 import com.beeacademy.backend.infrastructure.course.persistence.entity.LessonJpaEntity;
 import com.beeacademy.backend.infrastructure.course.persistence.repository.SpringDataCourseRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Adapter triển khai Domain Port {@link CourseRepositoryPort} bằng Spring Data JPA.
@@ -23,9 +22,11 @@ import java.util.UUID;
 public class CourseRepositoryAdapter implements CourseRepositoryPort {
 
     private final SpringDataCourseRepository repository;
+    private final ObjectMapper objectMapper;
 
-    public CourseRepositoryAdapter(SpringDataCourseRepository repository) {
+    public CourseRepositoryAdapter(SpringDataCourseRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -100,7 +101,7 @@ public class CourseRepositoryAdapter implements CourseRepositoryPort {
                                 lesEntity.getVideoStoragePath(),
                                 lesEntity.getDurationSec(),
                                 lesEntity.isFreePreview(),
-                                new ArrayList<>()
+                                parseDocuments(lesEntity.getDocumentsJson(), lesEntity.getId())
                         ));
                     }
                 }
@@ -190,7 +191,7 @@ public class CourseRepositoryAdapter implements CourseRepositoryPort {
                                 lesson.isFreePreview(),
                                 lesson.getVideoUrl(),
                                 lesson.getDurationSec(),
-                                "[]",
+                                serializeDocuments(lesson.getDocuments()),
                                 Instant.now(),
                                 Instant.now()
                         ));
@@ -202,5 +203,63 @@ public class CourseRepositoryAdapter implements CourseRepositoryPort {
         }
         courseEntity.setChapters(chapterEntities);
         return courseEntity;
+    }
+
+    private List<CourseDocument> parseDocuments(String json, UUID lessonId) {
+        if (json == null || json.isBlank() || json.trim().equals("[]")) {
+            return new ArrayList<>();
+        }
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            if (!root.isArray()) return new ArrayList<>();
+            List<CourseDocument> docs = new ArrayList<>();
+            for (JsonNode node : root) {
+                UUID docId = node.has("id") && !node.get("id").asText().isBlank()
+                        ? UUID.fromString(node.get("id").asText())
+                        : UUID.randomUUID();
+                String title = node.has("title") ? node.get("title").asText()
+                        : (node.has("name") ? node.get("name").asText() : "Tài liệu học tập");
+                String fileUrl = node.has("fileUrl") ? node.get("fileUrl").asText() : "";
+                long size = node.has("fileSizeBytes") ? node.get("fileSizeBytes").asLong() : 0L;
+                String typeStr = node.has("fileType") ? node.get("fileType").asText()
+                        : (node.has("documentType") ? node.get("documentType").asText() : "PDF");
+
+                DocumentType docType;
+                try {
+                    docType = DocumentType.valueOf(typeStr.toUpperCase());
+                } catch (Exception e) {
+                    docType = DocumentType.PDF;
+                }
+
+                if (!fileUrl.isBlank()) {
+                    docs.add(new CourseDocument(docId, lessonId, title, fileUrl, size, docType));
+                }
+            }
+            return docs;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private String serializeDocuments(List<CourseDocument> docs) {
+        if (docs == null || docs.isEmpty()) {
+            return "[]";
+        }
+        try {
+            List<Map<String, Object>> list = new ArrayList<>();
+            for (CourseDocument doc : docs) {
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("id", doc.getId().toString());
+                map.put("name", doc.getTitle());
+                map.put("title", doc.getTitle());
+                map.put("fileUrl", doc.getFileUrl());
+                map.put("fileType", doc.getDocumentType() != null ? doc.getDocumentType().name().toLowerCase() : "pdf");
+                map.put("fileSizeBytes", doc.getFileSizeBytes());
+                list.add(map);
+            }
+            return objectMapper.writeValueAsString(list);
+        } catch (Exception e) {
+            return "[]";
+        }
     }
 }

@@ -17,10 +17,12 @@ import java.util.UUID;
 @Repository
 public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntity, UUID> {
 
-    @Query("SELECT c FROM CourseJpaEntity c LEFT JOIN FETCH c.chapters ch LEFT JOIN FETCH ch.lessons WHERE c.id = :id")
+    @EntityGraph(attributePaths = {"chapters"})
+    @Query("SELECT c FROM CourseJpaEntity c WHERE c.id = :id")
     Optional<CourseJpaEntity> findByIdWithDetails(@Param("id") UUID id);
 
-    @Query("SELECT c FROM CourseJpaEntity c LEFT JOIN FETCH c.chapters ch LEFT JOIN FETCH ch.lessons WHERE c.slug = :slug")
+    @EntityGraph(attributePaths = {"chapters"})
+    @Query("SELECT c FROM CourseJpaEntity c WHERE c.slug = :slug")
     Optional<CourseJpaEntity> findBySlugWithDetails(@Param("slug") String slug);
 
     Optional<CourseJpaEntity> findBySlug(String slug);

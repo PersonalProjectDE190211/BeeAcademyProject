@@ -38,6 +38,7 @@ public class ChapterJpaEntity {
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("position ASC")
+    @org.hibernate.annotations.BatchSize(size = 50)
     private List<LessonJpaEntity> lessons = new ArrayList<>();
 
     public ChapterJpaEntity() {

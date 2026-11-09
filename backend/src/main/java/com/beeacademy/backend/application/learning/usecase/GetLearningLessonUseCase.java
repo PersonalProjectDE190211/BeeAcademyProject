@@ -1,5 +1,6 @@
 package com.beeacademy.backend.application.learning.usecase;
 
+import com.beeacademy.backend.application.course.dto.CourseDocumentDto;
 import com.beeacademy.backend.application.learning.dto.LearningLessonResult;
 import com.beeacademy.backend.domain.common.DomainException;
 import com.beeacademy.backend.domain.course.Chapter;
@@ -12,6 +13,7 @@ import com.beeacademy.backend.domain.learning.StudentVideoProgressRepositoryPort
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -73,6 +75,10 @@ public class GetLearningLessonUseCase {
                 .map(p -> p.getWatchSegments().calculateWatchPercent(lesson.getDurationSec()).value().doubleValue())
                 .orElse(0.0);
 
+        List<CourseDocumentDto> docDtos = lesson.getDocuments() != null
+                ? lesson.getDocuments().stream().map(CourseDocumentDto::from).toList()
+                : List.of();
+
         return new LearningLessonResult(
                 lesson.getId(),
                 chapterId,
@@ -83,7 +89,8 @@ public class GetLearningLessonUseCase {
                 lesson.isFreePreview(),
                 isCompleted,
                 lastPos,
-                watchPercent
+                watchPercent,
+                docDtos
         );
     }
 }

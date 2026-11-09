@@ -1,5 +1,8 @@
 package com.beeacademy.backend.application.learning.dto;
 
+import com.beeacademy.backend.application.course.dto.CourseDocumentDto;
+
+import java.util.List;
 import java.util.UUID;
 
 public record LearningLessonResult(
@@ -12,6 +15,7 @@ public record LearningLessonResult(
         boolean isFreePreview,
         boolean isCompleted,
         int lastPositionSec,
-        double watchPercent
+        double watchPercent,
+        List<CourseDocumentDto> documents
 ) {
 }
