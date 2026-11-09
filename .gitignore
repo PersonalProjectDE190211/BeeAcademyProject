@@ -96,3 +96,6 @@ frontend/.evn.local
 /PHAN_CONG_NHIEM_VU.md
 /TEAM_TASK_DIVISION.md
 *.tsbuildinfo
+*.dc.html
+Login.dc.html
+BeeAcademy*.html
