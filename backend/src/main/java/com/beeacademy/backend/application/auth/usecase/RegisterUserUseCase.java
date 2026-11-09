@@ -5,6 +5,7 @@ import com.beeacademy.backend.application.auth.dto.UserProfileResult;
 import com.beeacademy.backend.domain.auth.PasswordHash;
 import com.beeacademy.backend.domain.auth.Profile;
 import com.beeacademy.backend.domain.auth.ProfileRepositoryPort;
+import com.beeacademy.backend.domain.auth.UserRole;
 import com.beeacademy.backend.domain.common.DomainException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,14 @@ public class RegisterUserUseCase {
             throw new DomainException("INVALID_COMMAND", "Dữ liệu đăng ký không được rỗng");
         }
 
+        // Không cho phép tự đăng ký Teacher hoặc Admin công khai
+        if (command.role() == UserRole.TEACHER || command.role() == UserRole.ADMIN) {
+            throw new DomainException("FORBIDDEN_ROLE",
+                    "Vai trò này không được phép tự đăng ký công khai. Thầy/Cô vui lòng liên hệ Ban Quản trị qua email để được thẩm định và cấp tài khoản.");
+        }
+
+        UserRole effectiveRole = command.role() != null ? command.role() : UserRole.STUDENT;
+
         String email = command.email().trim().toLowerCase();
         if (profileRepository.existsByEmail(email)) {
             throw new DomainException("EMAIL_ALREADY_EXISTS", "Email này đã được đăng ký trong hệ thống");
@@ -43,7 +52,7 @@ public class RegisterUserUseCase {
                 UUID.randomUUID(),
                 email,
                 PasswordHash.of(encodedPassword),
-                command.role(),
+                effectiveRole,
                 command.fullName()
         );
 

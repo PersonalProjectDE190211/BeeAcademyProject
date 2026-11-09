@@ -84,6 +84,49 @@ class RegisterAndChangePasswordTest {
     }
 
     @Test
+    @DisplayName("UC01 - Từ chối tự đăng ký công khai với role TEACHER hoặc ADMIN")
+    void testRegisterForbiddenRole() {
+        RegisterCommand teacherCommand = new RegisterCommand(
+                "teacher@beeacademy.edu.vn",
+                "Pass123456",
+                "Giao Vien A",
+                UserRole.TEACHER
+        );
+        DomainException ex1 = assertThrows(DomainException.class, () -> registerUseCase.execute(teacherCommand));
+        assertEquals("FORBIDDEN_ROLE", ex1.getErrorCode());
+
+        RegisterCommand adminCommand = new RegisterCommand(
+                "admin@beeacademy.edu.vn",
+                "Pass123456",
+                "Admin A",
+                UserRole.ADMIN
+        );
+        DomainException ex2 = assertThrows(DomainException.class, () -> registerUseCase.execute(adminCommand));
+        assertEquals("FORBIDDEN_ROLE", ex2.getErrorCode());
+
+        verify(profileRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UC01 - Cho phép tự đăng ký với vai trò PARENT")
+    void testRegisterParentSuccess() {
+        when(profileRepository.existsByEmail("parent@beeacademy.edu.vn")).thenReturn(false);
+        when(passwordEncoder.encode("Pass123456")).thenReturn("$2a$12$EncodedHashMocked");
+        when(profileRepository.save(any(Profile.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RegisterCommand command = new RegisterCommand(
+                "parent@beeacademy.edu.vn",
+                "Pass123456",
+                "Phu Huynh A",
+                UserRole.PARENT
+        );
+
+        UserProfileResult result = registerUseCase.execute(command);
+        assertNotNull(result);
+        assertEquals("parent", result.role());
+    }
+
+    @Test
     @DisplayName("UC05 - Đổi mật khẩu thành công: xác thực mật khẩu cũ, cập nhật băm mới, thu hồi token")
     void testChangePasswordSuccess() {
         UUID userId = UUID.randomUUID();
