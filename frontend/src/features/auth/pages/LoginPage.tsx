@@ -155,10 +155,10 @@ export const LoginPage: React.FC = () => {
             <p className="mt-8 text-center text-xs text-slate-500 leading-relaxed">
               Bạn là giáo viên? Tài khoản giáo viên được cấp sau khi duyệt hồ sơ. Gửi hồ sơ đến{' '}
               <a
-                href="mailto:admin@beeacademy.edu.vn"
+                href="mailto:Thanhdatvv05@gmail.com"
                 className="font-medium text-[#b8320c] underline hover:text-[#9c2909]"
               >
-                admin@beeacademy.edu.vn
+                Thanhdatvv05@gmail.com
               </a>.
             </p>
           </div>
