@@ -5,14 +5,12 @@ interface AuthLeftBannerProps {
   title?: string;
   subtitle?: string;
   showChecklist?: boolean;
-  showProgressCard?: boolean;
 }
 
 export const AuthLeftBanner: React.FC<AuthLeftBannerProps> = ({
   title = 'Học tập vui hơn,\ntiến bộ mỗi ngày',
-  subtitle = 'Bài giảng sinh động, bài kiểm tra có kết quả ngay và theo dõi tiến độ dành cho học sinh và phụ huynh.',
+  subtitle = 'Nền tảng học tập trực tuyến K–12 với bài giảng sinh động, bài kiểm tra có kết quả ngay và theo dõi tiến độ dành cho học sinh và phụ huynh.',
   showChecklist = true,
-  showProgressCard = true,
 }) => {
   return (
     <aside className="auth-side relative overflow-hidden flex flex-col justify-between p-8 sm:p-12 lg:px-16 lg:py-14 text-white min-h-[380px] lg:min-h-screen select-none">
@@ -56,16 +54,16 @@ export const AuthLeftBanner: React.FC<AuthLeftBannerProps> = ({
         </span>
       </Link>
 
-      {/* Middle: Headline, Checklist & Floating Glassmorphic Progress Card */}
-      <div className="relative z-10 my-auto py-8 lg:py-0 max-w-[460px]">
+      {/* Middle: Headline, Subtitle, Checklist & Trust Card */}
+      <div className="relative z-10 my-auto py-8 lg:py-0 max-w-[480px]">
         <h1
-          className="auth-rise text-3xl sm:text-4xl xl:text-[44px] font-bold leading-[1.15] text-white tracking-tight whitespace-pre-line mb-4"
+          className="auth-rise text-3xl sm:text-4xl xl:text-[46px] font-bold leading-[1.18] text-white tracking-tight whitespace-pre-line mb-5"
           style={{ '--rise-delay': '250ms' } as React.CSSProperties}
         >
           {title}
         </h1>
         <p
-          className="auth-rise text-[16px] sm:text-[17px] leading-[1.6] text-on-brand-muted max-w-[440px]"
+          className="auth-rise text-[16px] sm:text-[17px] leading-[1.65] text-on-brand-muted max-w-[440px]"
           style={{ '--rise-delay': '400ms' } as React.CSSProperties}
         >
           {subtitle}
@@ -74,58 +72,66 @@ export const AuthLeftBanner: React.FC<AuthLeftBannerProps> = ({
         {/* Feature Checklist */}
         {showChecklist && (
           <div
-            className="auth-rise mt-6 space-y-2.5 text-[15px] text-white/95 font-medium"
+            className="auth-rise mt-8 space-y-4 text-[15px] sm:text-[16px] text-white/95 font-medium"
             style={{ '--rise-delay': '550ms' } as React.CSSProperties}
           >
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
+            <div className="flex items-center gap-3.5">
+              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white shadow-xs">
                 ✓
               </span>
-              <span>Khóa học bám sát chương trình K–12</span>
+              <span>Khóa học bám sát chương trình chuẩn K–12</span>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
+            <div className="flex items-center gap-3.5">
+              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white shadow-xs">
                 ✓
               </span>
-              <span>Làm bài kiểm tra và xem kết quả ngay</span>
+              <span>Làm bài kiểm tra và xem kết quả phân tích ngay</span>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
+            <div className="flex items-center gap-3.5">
+              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white shadow-xs">
                 ✓
               </span>
-              <span>Phụ huynh theo dõi tiến độ của con</span>
+              <span>Phụ huynh theo dõi sát sao lộ trình và tiến độ của con</span>
             </div>
           </div>
         )}
 
-        {/* Animated Glassmorphic Weekly Progress Card */}
-        {showProgressCard && (
-          <div
-            className="auth-card mt-7 rounded-[18px] border border-white/30 bg-white/16 px-5 py-[18px] max-w-[340px] backdrop-blur-md shadow-[0_12px_32px_rgba(90,22,0,0.18)]"
-          >
-            <div className="flex items-center justify-between text-[14px] mb-2.5">
-              <span className="font-medium text-white/95">Tiến độ tuần này</span>
-              <strong className="font-bold text-white">82%</strong>
+        {/* Social Proof / Trust Highlights for Unauthenticated Guests */}
+        <div
+          className="auth-rise mt-10 rounded-[18px] border border-white/25 bg-white/12 p-4 sm:p-5 backdrop-blur-md shadow-[0_12px_30px_rgba(90,22,0,0.15)] max-w-[420px]"
+          style={{ '--rise-delay': '700ms' } as React.CSSProperties}
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="flex -space-x-2 shrink-0">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/80 bg-amber-200 text-xs font-bold text-brand-700 shadow-xs">
+                B
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/80 bg-orange-200 text-xs font-bold text-brand-700 shadow-xs">
+                A
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/80 bg-rose-200 text-xs font-bold text-brand-700 shadow-xs">
+                K
+              </div>
             </div>
-            <div className="h-2 w-full rounded-full bg-white/28 overflow-hidden">
-              <div
-                className="auth-bar h-full rounded-full bg-white"
-                style={{ '--bar-to': '82%' } as React.CSSProperties}
-              />
-            </div>
-            <div className="mt-2.5 text-[13px] text-on-brand-muted">
-              Còn 2 bài học nữa để hoàn thành mục tiêu
+            <div className="text-left">
+              <div className="text-[14px] font-bold text-white">
+                10.000+ Học sinh & Phụ huynh
+              </div>
+              <div className="text-[12px] text-on-brand-muted">
+                Đồng hành rèn luyện và tiến bộ mỗi ngày cùng BeeAcademy
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Bottom: Copyright */}
+      {/* Bottom: Copyright & Policy */}
       <div
-        className="auth-rise relative z-10 text-[13px] text-white/75 pt-4 lg:pt-0"
-        style={{ '--rise-delay': '700ms' } as React.CSSProperties}
+        className="auth-rise relative z-10 flex items-center justify-between text-[13px] text-white/75 pt-6 lg:pt-0"
+        style={{ '--rise-delay': '850ms' } as React.CSSProperties}
       >
-        © BeeAcademy
+        <span>© BeeAcademy</span>
+        <span className="text-white/60">Học tập thông minh • Tương lai vững vàng</span>
       </div>
     </aside>
   );
