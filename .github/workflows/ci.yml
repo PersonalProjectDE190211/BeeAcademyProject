@@ -33,9 +33,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'maven'
+          cache-dependency-path: 'backend/pom.xml'
 
-      - name: Make Maven Wrapper Executable
-        run: chmod +x mvnw
+      - name: Fix line endings and permissions for Maven Wrapper
+        run: |
+          sed -i -e 's/\r$//' mvnw
+          chmod +x mvnw
 
       - name: Run Maven Verify (Compile, Test, Package)
         run: ./mvnw -B clean verify
@@ -77,3 +80,4 @@ jobs:
     steps:
       - name: Verify All CI Checks Passed
         run: echo "All backend and frontend quality checks passed successfully. Ready for deployment."
+

@@ -1,0 +1,6 @@
+# Tự động chuẩn hóa line endings
+* text=auto
+
+# Giữ nguyên Unix LF cho các script shell và Maven wrapper
+backend/mvnw text eol=lf
+*.sh text eol=lf
