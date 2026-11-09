@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Tự động rà soát cập nhật dependencies cho Maven Backend
+  - package-ecosystem: "maven"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+
+  # Tự động rà soát cập nhật dependencies cho npm Frontend
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10

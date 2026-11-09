@@ -155,6 +155,18 @@
             <version>${apache-poi.version}</version>
         </dependency>
 
+        <!-- ===== Actuator: Health Check & Monitoring ===== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- ===== Flyway: Database Migrations ===== -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
         <!-- ===== Test ===== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

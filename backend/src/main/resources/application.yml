@@ -60,6 +60,16 @@ spring:
     open-in-view: false   # Tắt OSIV - tránh lazy load ngoài transaction (best practice)
 
   # --------------------------------------------------------------------------
+  # Flyway Database Migrations
+  # --------------------------------------------------------------------------
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 7
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
+  # --------------------------------------------------------------------------
   # Mail: gửi OTP qua Gmail SMTP
   # --------------------------------------------------------------------------
   mail:
@@ -144,3 +154,17 @@ logging:
     root: INFO
     com.beeacademy: INFO
     org.springframework.security: WARN
+
+# ============================================================================
+# Spring Boot Actuator - Health Check & Readiness Probes
+# ============================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
