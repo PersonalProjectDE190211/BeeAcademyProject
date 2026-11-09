@@ -4,12 +4,16 @@ import toast from 'react-hot-toast';
 import {
   BookOpen,
   CheckCircle2,
+  Download,
+  FileText,
   Lock,
   PlayCircle,
   ShoppingCart,
   Star,
 } from 'lucide-react';
 import { courseApi, CourseDetail, CourseReviewItem, LessonItem } from '../api/courseApi';
+import { VietQrPaymentModal } from '@/features/commerce/components/VietQrPaymentModal';
+import { VideoPlayer } from '@/shared/components/media/VideoPlayer';
 import { httpClient } from '@/shared/api/httpClient';
 import { useAuthStore } from '@/shared/store/useAuthStore';
 import { ApiResponse, formatVnd, getApiErrorMessage } from '@/shared/types/api';
@@ -37,6 +41,14 @@ export const CourseDetailPage: React.FC = () => {
 
   const [previewLesson, setPreviewLesson] = useState<LessonItem | null>(null);
   const [enrollingOrOrdering, setEnrollingOrOrdering] = useState(false);
+  const [paymentOrder, setPaymentOrder] = useState<{
+    id: string;
+    orderCode: number;
+    paymentRef: string;
+    totalAmountVnd: number;
+    expiresAt?: string;
+    status?: string;
+  } | null>(null);
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
@@ -79,12 +91,29 @@ export const CourseDetailPage: React.FC = () => {
         toast.success('Ghi danh khóa học miễn phí thành công!');
         navigate(`/learning/courses/${course.id}`);
       } else {
-        const res = await httpClient.post<ApiResponse<{ orderId: string }>>('/student/orders', {
+        const res = await httpClient.post<
+          ApiResponse<{
+            orderId: string;
+            orderCode?: number;
+            paymentRef?: string;
+            totalAmountVnd?: number;
+            expiresAt?: string;
+            status?: string;
+          }>
+        >('/student/orders', {
           courseIds: [course.id],
           paymentMethod: 'PAYOS',
         });
-        toast.success('Đã khởi tạo đơn hàng thanh toán khóa học!');
-        navigate(`/orders?highlight=${res.data.data.orderId}`);
+        const orderData = res.data.data;
+        toast.success('Đã khởi tạo đơn hàng VietQR!');
+        setPaymentOrder({
+          id: orderData.orderId,
+          orderCode: orderData.orderCode || Date.now() % 1000000,
+          paymentRef: orderData.paymentRef || `PAY-${orderData.orderId.substring(0, 8).toUpperCase()}`,
+          totalAmountVnd: orderData.totalAmountVnd || course.priceVnd,
+          expiresAt: orderData.expiresAt,
+          status: orderData.status || 'PENDING',
+        });
       }
     } catch (err) {
       toast.error(getApiErrorMessage(err, 'Không thể xử lý đăng ký khóa học.'));
@@ -222,30 +251,60 @@ export const CourseDetailPage: React.FC = () => {
                     {ch.lessons.map((lesson) => (
                       <div
                         key={lesson.id}
-                        className="flex items-center justify-between py-2.5 text-sm"
+                        className="py-2.5 text-sm"
                       >
-                        <div className="flex items-center gap-2.5">
-                          {lesson.isFreePreview ? (
-                            <PlayCircle className="h-4 w-4 text-emerald-600" />
-                          ) : (
-                            <Lock className="h-4 w-4 text-slate-400" />
-                          )}
-                          <span className="font-medium text-slate-800">{lesson.title}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            {lesson.isFreePreview ? (
+                              <PlayCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                            ) : (
+                              <Lock className="h-4 w-4 text-slate-400 shrink-0" />
+                            )}
+                            <span className="font-medium text-slate-800">{lesson.title}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-500">
+                              {Math.max(1, Math.round(lesson.durationSec / 60))} phút
+                            </span>
+                            {lesson.isFreePreview && lesson.videoUrl && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => setPreviewLesson(lesson)}
+                              >
+                                Học thử miễn phí
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-slate-500">
-                            {Math.max(1, Math.round(lesson.durationSec / 60))} phút
-                          </span>
-                          {lesson.isFreePreview && lesson.videoUrl && (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => setPreviewLesson(lesson)}
-                            >
-                              Học thử miễn phí
-                            </Button>
-                          )}
-                        </div>
+
+                        {lesson.documents && lesson.documents.length > 0 && (
+                          <div className="mt-2 pl-6 space-y-1.5">
+                            {lesson.documents.map((doc) => (
+                              <a
+                                key={doc.id}
+                                href={doc.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 transition-colors group"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <FileText className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                                  <span className="text-xs font-medium text-slate-700 group-hover:text-amber-900 truncate">
+                                    {doc.title}
+                                  </span>
+                                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">
+                                    {doc.documentType}
+                                  </span>
+                                </div>
+                                <span className="text-[11px] text-slate-400 group-hover:text-amber-700 flex items-center gap-1 shrink-0 ml-2">
+                                  {(doc.fileSizeBytes / 1024 / 1024).toFixed(1)} MB
+                                  <Download className="h-3 w-3" />
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -311,30 +370,45 @@ export const CourseDetailPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Free Lesson Video Preview Modal */}
       <Modal
         open={Boolean(previewLesson)}
         onClose={() => setPreviewLesson(null)}
-        title={`Học thử miễn phí: ${previewLesson?.title || ''}`}
+        title={`Học thử bài giảng: ${previewLesson?.title || ''}`}
       >
         {previewLesson && (
-          <div className="space-y-3">
-            <div className="rounded-xl bg-slate-900 p-4 text-white">
-              <p className="text-xs text-slate-300">Đường dẫn Video bài giảng:</p>
-              <a
-                href={previewLesson.videoUrl || '#'}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-1 block break-all text-sm font-medium text-amber-400 underline"
+          <div className="space-y-4">
+            <VideoPlayer
+              videoUrl={previewLesson.videoUrl}
+              title={previewLesson.title}
+              autoPlay
+            />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500 pt-1">
+              <span>Thời lượng bài giảng: {Math.max(1, Math.round(previewLesson.durationSec / 60))} phút</span>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  setPreviewLesson(null);
+                  handleEnrollOrBuy();
+                }}
               >
-                {previewLesson.videoUrl}
-              </a>
+                {course.priceVnd === 0 ? 'Ghi danh miễn phí để học tiếp' : 'Mua trọn bộ khóa học'}
+              </Button>
             </div>
-            <p className="text-xs text-slate-500">
-              Thời lượng bài giảng: {Math.round(previewLesson.durationSec / 60)} phút. Hãy ghi danh khóa học để mở khóa toàn bộ giáo trình và bài kiểm tra!
-            </p>
           </div>
         )}
       </Modal>
+
+      {/* VietQR Payment Modal */}
+      <VietQrPaymentModal
+        isOpen={Boolean(paymentOrder)}
+        onClose={() => setPaymentOrder(null)}
+        order={paymentOrder}
+        onPaymentSuccess={() => {
+          navigate(`/learning/courses/${course.id}`);
+        }}
+      />
     </div>
   );
 };

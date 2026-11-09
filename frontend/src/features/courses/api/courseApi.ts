@@ -11,6 +11,14 @@ export interface CategoryItem {
   active: boolean;
 }
 
+export interface CourseDocumentItem {
+  id: string;
+  title: string;
+  fileUrl: string;
+  fileSizeBytes: number;
+  documentType: string;
+}
+
 export interface LessonItem {
   id: string;
   title: string;
@@ -18,6 +26,7 @@ export interface LessonItem {
   videoUrl?: string | null;
   durationSec: number;
   isFreePreview: boolean;
+  documents?: CourseDocumentItem[];
 }
 
 export interface ChapterItem {

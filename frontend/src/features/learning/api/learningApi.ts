@@ -1,5 +1,6 @@
 import { httpClient } from '@/shared/api/httpClient';
 import { ApiResponse } from '@/shared/types/api';
+import { CourseDocumentItem } from '@/features/courses/api/courseApi';
 
 export interface EnrollmentSummary {
   id: string;
@@ -26,6 +27,7 @@ export interface LearningLesson {
   isCompleted: boolean;
   lastPositionSec: number;
   watchPercent: number;
+  documents?: CourseDocumentItem[];
 }
 
 export interface LessonProgressUpdate {

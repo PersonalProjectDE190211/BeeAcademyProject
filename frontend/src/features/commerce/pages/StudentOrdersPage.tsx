@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { CreditCard, QrCode, ShoppingBag, XCircle } from 'lucide-react';
 import { commerceApi, OrderDto } from '../api/commerceApi';
+import { VietQrPaymentModal } from '../components/VietQrPaymentModal';
 import { formatVnd, getApiErrorMessage } from '@/shared/types/api';
 import {
   Badge,
@@ -14,10 +15,16 @@ import {
 } from '@/shared/ui/primitives';
 
 export const StudentOrdersPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const highlightOrderId = searchParams.get('highlight');
+
   const [orders, setOrders] = useState<OrderDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+
+  // VietQR modal state
+  const [qrModalOrder, setQrModalOrder] = useState<OrderDto | null>(null);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -25,6 +32,14 @@ export const StudentOrdersPage: React.FC = () => {
     try {
       const list = await commerceApi.getMyOrders();
       setOrders(list);
+
+      // If highlight query is present, find and open that order's QR modal automatically
+      if (highlightOrderId) {
+        const found = list.find((o) => o.id === highlightOrderId && o.status === 'PENDING');
+        if (found) {
+          setQrModalOrder(found);
+        }
+      }
     } catch (err) {
       setError(getApiErrorMessage(err, 'Không thể tải lịch sử đơn hàng.'));
     } finally {
@@ -34,7 +49,7 @@ export const StudentOrdersPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [highlightOrderId]);
 
   const handleCancelOrder = async (orderId: string) => {
     setCancelingId(orderId);
@@ -151,14 +166,11 @@ export const StudentOrdersPage: React.FC = () => {
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() =>
-                          toast.success(
-                            `Quét mã VietQR với nội dung chuyển khoản: ${order.paymentRef}`
-                          )
-                        }
+                        variant="primary"
+                        onClick={() => setQrModalOrder(order)}
                       >
                         <QrCode className="h-4 w-4" />
-                        Hiển thị mã VietQR ({order.paymentRef})
+                        Quét mã VietQR ({order.paymentRef})
                       </Button>
                     </>
                   )}
@@ -176,6 +188,16 @@ export const StudentOrdersPage: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* VietQR Payment Modal */}
+      <VietQrPaymentModal
+        isOpen={!!qrModalOrder}
+        onClose={() => setQrModalOrder(null)}
+        order={qrModalOrder}
+        onPaymentSuccess={() => {
+          fetchOrders();
+        }}
+      />
     </div>
   );
 };

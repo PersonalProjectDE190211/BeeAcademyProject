@@ -172,13 +172,16 @@ export function Badge({
 
 export function Card({
   className,
+  id,
   children,
 }: {
   className?: string;
+  id?: string;
   children: React.ReactNode;
 }) {
   return (
     <div
+      id={id}
       className={cn(
         'rounded-xl border border-slate-200/80 bg-white p-5 shadow-2xs',
         className

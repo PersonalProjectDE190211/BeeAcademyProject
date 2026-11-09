@@ -30,6 +30,7 @@ export interface UserProfile {
   avatarUrl: string | null;
   phone: string | null;
   bio: string | null;
+  grade?: number | null;
   teacherApprovalStatus: TeacherApprovalStatus;
   isBlocked: boolean;
   createdAt: string;

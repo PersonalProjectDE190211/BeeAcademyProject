@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
+  Bot,
   CheckCircle2,
   ClipboardCheck,
+  Download,
+  FileText,
   MessageSquare,
   Play,
   Send,
@@ -15,6 +18,7 @@ import {
   LearningLesson,
   QaThreadItem,
 } from '../api/learningApi';
+import { VideoPlayer } from '@/shared/components/media/VideoPlayer';
 import { getApiErrorMessage } from '@/shared/types/api';
 import {
   Badge,
@@ -192,44 +196,119 @@ export const CourseLearningRoomPage: React.FC = () => {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {activeLesson ? (
-            <Card className="overflow-hidden p-0">
-              <div className="bg-slate-900 p-6 text-white">
-                <div className="flex items-center justify-between gap-2">
-                  <Badge tone={activeLesson.isCompleted ? 'success' : 'warning'}>
-                    {activeLesson.isCompleted
-                      ? 'Đã hoàn thành (≥ 80%)'
-                      : `Đã xem ${Math.round(activeLesson.watchPercent || 0)}%`}
-                  </Badge>
-                  <span className="text-xs text-slate-400">
-                    Thời lượng: {Math.round(activeLesson.durationSec / 60)} phút
-                  </span>
+            <Card className="overflow-hidden p-0 border border-sand shadow-md">
+              {/* Interactive Video Player */}
+              <VideoPlayer
+                videoUrl={activeLesson.videoUrl}
+                title={activeLesson.title}
+                autoPlay={false}
+                onProgress={(pct) => {
+                  if (pct >= 80 && !activeLesson.isCompleted) {
+                    handleRecordHeartbeat(true);
+                  }
+                }}
+                onCompleted={() => {
+                  handleRecordHeartbeat(true);
+                }}
+              />
+
+              <div className="bg-white p-5 sm:p-6 border-t border-sand">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Badge tone={activeLesson.isCompleted ? 'success' : 'brand'}>
+                      {activeLesson.isCompleted
+                        ? '✓ Đã hoàn thành bài học (≥ 80%)'
+                        : `Đang học • Đã xem ${Math.round(activeLesson.watchPercent || 0)}%`}
+                    </Badge>
+                    <span className="text-xs text-ink-muted">
+                      Thời lượng: {Math.max(1, Math.round(activeLesson.durationSec / 60))} phút
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      loading={trackingHeartbeat}
+                      onClick={() => handleRecordHeartbeat(false)}
+                      title="Ghi nhận phân đoạn học tập tiếp theo"
+                    >
+                      <Play className="h-3.5 w-3.5" />
+                      Lưu tiến độ (+30%)
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={activeLesson.isCompleted ? 'secondary' : 'primary'}
+                      loading={trackingHeartbeat}
+                      onClick={() => handleRecordHeartbeat(true)}
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      {activeLesson.isCompleted ? 'Xác nhận lại hoàn thành' : 'Đánh dấu xem xong bài (≥ 80%)'}
+                    </Button>
+                  </div>
                 </div>
 
-                <h2 className="mt-3 text-lg font-bold">{activeLesson.title}</h2>
-                <p className="mt-1 break-all text-xs text-amber-300">
-                  Nguồn phát Video: {activeLesson.videoUrl}
-                </p>
+                <h2 className="mt-3 text-lg font-bold text-ink">{activeLesson.title}</h2>
 
-                <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-800 pt-4">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    loading={trackingHeartbeat}
-                    onClick={() => handleRecordHeartbeat(false)}
-                  >
-                    <Play className="h-4 w-4" />
-                    Gửi Heartbeat (+30% phân đoạn xem)
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    loading={trackingHeartbeat}
-                    onClick={() => handleRecordHeartbeat(true)}
-                  >
-                    <ShieldCheck className="h-4 w-4" />
-                    Xem trọn vẹn bài giảng (Đạt chuẩn ≥ 80%)
-                  </Button>
+                {/* Anti-Skip Progress Bar */}
+                <div className="mt-4">
+                  <div className="flex justify-between text-xs text-ink-muted mb-1.5 font-medium">
+                    <span>Tiến độ xem bài giảng (Yêu cầu tối thiểu 80% để mở Quiz)</span>
+                    <span className="font-bold text-brand-700">
+                      {Math.round(activeLesson.watchPercent || 0)}% / 100%
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-sand-soft relative">
+                    {/* 80% marker */}
+                    <div
+                      className="absolute top-0 bottom-0 w-0.5 bg-red-400 z-10"
+                      style={{ left: '80%' }}
+                      title="Ngưỡng chuẩn tối thiểu 80%"
+                    />
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        activeLesson.isCompleted ? 'bg-emerald-600' : 'bg-gradient-to-r from-brand-700 to-brand-500'
+                      }`}
+                      style={{ width: `${Math.min(100, Math.round(activeLesson.watchPercent || 0))}%` }}
+                    />
+                  </div>
                 </div>
+
+                {/* Tài liệu đính kèm & Bài tập thực hành của bài giảng */}
+                {activeLesson.documents && activeLesson.documents.length > 0 && (
+                  <div className="mt-5 pt-4 border-t border-sand">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2.5 flex items-center gap-1.5">
+                      <FileText className="h-4 w-4 text-brand-600" />
+                      Tài liệu đính kèm & Bài tập thực hành ({activeLesson.documents.length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {activeLesson.documents.map((doc) => (
+                        <a
+                          key={doc.id}
+                          href={doc.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2.5 rounded-lg bg-sand-soft/60 hover:bg-brand-50 border border-sand hover:border-brand-300 transition group"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText className="h-4 w-4 text-brand-600 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-ink group-hover:text-brand-900 truncate">
+                                {doc.title}
+                              </p>
+                              <p className="text-[10px] text-ink-muted">
+                                {doc.documentType.toUpperCase()} • {(doc.fileSizeBytes / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <span className="p-1 rounded bg-white group-hover:bg-brand-100 text-brand-700 shadow-sm shrink-0 ml-2">
+                            <Download className="h-3 w-3" />
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           ) : (
@@ -238,11 +317,26 @@ export const CourseLearningRoomPage: React.FC = () => {
 
           {activeLesson && (
             <Card className="p-5">
-              <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
-                <MessageSquare className="h-5 w-5 text-amber-600" />
-                <h3 className="text-base font-bold text-slate-900">
-                  Hỏi đáp & Thảo luận dưới bài giảng ({discussions.length})
-                </h3>
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-amber-600" />
+                  <h3 className="text-base font-bold text-slate-900">
+                    Hỏi đáp & Thảo luận dưới bài giảng ({discussions.length})
+                  </h3>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  type="button"
+                  onClick={() => {
+                    const botBtn = document.querySelector('button[title*="BeeBot"]') as HTMLButtonElement;
+                    if (botBtn) botBtn.click();
+                  }}
+                  className="flex items-center gap-1.5 text-xs text-amber-700 border-amber-300 hover:bg-amber-50"
+                >
+                  <Bot className="h-4 w-4 text-amber-600" />
+                  Hỏi nhanh BeeBot AI
+                </Button>
               </div>
 
               <form onSubmit={handleAskQuestion} className="mb-6 space-y-3 rounded-xl bg-slate-50 p-4">
