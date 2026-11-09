@@ -61,13 +61,22 @@ public class CloudinaryStorageAdapter implements MediaStoragePort {
         String targetFolder = (folder != null && !folder.isBlank()) ? folder : "beeacademy/courses/thumbnails";
 
         if (!isConfigured()) {
-            log.warn("Cloudinary chưa được cấu hình key. Trả về Mock URL phục vụ Local Dev.");
+            log.warn("Cloudinary chưa được cấu hình key. Trả về Data URL phục vụ Local Dev để hiển thị đúng ảnh người dùng.");
             String mockPublicId = targetFolder + "/" + UUID.randomUUID();
+            String mime = "image/jpeg";
+            if (originalFilename != null) {
+                String lower = originalFilename.toLowerCase();
+                if (lower.endsWith(".png")) mime = "image/png";
+                else if (lower.endsWith(".webp")) mime = "image/webp";
+                else if (lower.endsWith(".gif")) mime = "image/gif";
+            }
+            String base64 = java.util.Base64.getEncoder().encodeToString(bytes);
+            String dataUrl = "data:" + mime + ";base64," + base64;
             return new MediaUploadResult(
-                    "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+                    dataUrl,
                     mockPublicId,
                     "image",
-                    "jpg",
+                    mime.replace("image/", ""),
                     bytes.length,
                     null
             );

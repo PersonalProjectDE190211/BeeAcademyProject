@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { ShieldCheck, User, Camera } from 'lucide-react';
+import { ShieldCheck, User, Camera, Upload, Trash2, X, Check } from 'lucide-react';
 import { authApi } from '../api/authApi';
 import { useAuthStore } from '@/shared/store/useAuthStore';
 import { getApiErrorMessage } from '@/shared/types/api';
@@ -16,7 +16,13 @@ export const ProfileSettingsPage: React.FC = () => {
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Avatar Upload States
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [savingAvatar, setSavingAvatar] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -44,6 +50,15 @@ export const ProfileSettingsPage: React.FC = () => {
     fetchProfile();
   }, []);
 
+  // Clean up Object URL when component unmounts or preview changes
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingProfile(true);
@@ -62,16 +77,82 @@ export const ProfileSettingsPage: React.FC = () => {
     }
   };
 
-  const handleSaveAvatar = async (e: React.FormEvent) => {
+  const validateAndSelectFile = (file: File) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc WEBP.');
+      return;
+    }
+    const maxBytes = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxBytes) {
+      toast.error('Dung lượng ảnh không được vượt quá 5MB.');
+      return;
+    }
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setSelectedFile(file);
+    setPreviewUrl(objectUrl);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      validateAndSelectFile(files[0]);
+    }
+    // Reset file input so re-selecting same file triggers change
+    e.target.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!avatarUrl.trim()) return;
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      validateAndSelectFile(files[0]);
+    }
+  };
+
+  const handleCancelSelectedAvatar = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
+
+  const handleUploadAvatar = async () => {
+    if (!selectedFile) return;
+
     setSavingAvatar(true);
     try {
-      const updated = await authApi.updateAvatar(avatarUrl.trim());
+      const updated = await authApi.uploadAvatarFile(selectedFile);
       updateUser(updated);
-      toast.success('Đã cập nhật ảnh đại diện!');
+      setAvatarUrl(updated.avatarUrl || '');
+      handleCancelSelectedAvatar();
+      toast.success('Đã cập nhật ảnh đại diện thành công!');
     } catch (err) {
-      toast.error(getApiErrorMessage(err, 'Không thể cập nhật ảnh đại diện.'));
+      toast.error(getApiErrorMessage(err, 'Không thể tải lên ảnh đại diện. Vui lòng thử lại.'));
+    } finally {
+      setSavingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!avatarUrl) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại?')) return;
+
+    setSavingAvatar(true);
+    try {
+      const updated = await authApi.deleteAvatar();
+      updateUser(updated);
+      setAvatarUrl('');
+      handleCancelSelectedAvatar();
+      toast.success('Đã xóa ảnh đại diện thành công!');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Không thể xóa ảnh đại diện.'));
     } finally {
       setSavingAvatar(false);
     }
@@ -110,6 +191,9 @@ export const ProfileSettingsPage: React.FC = () => {
     return <ErrorState message={loadError} onRetry={fetchProfile} />;
   }
 
+  const displayedAvatar = previewUrl || avatarUrl;
+  const initialLetter = fullName.trim().charAt(0).toUpperCase() || 'B';
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
@@ -140,6 +224,7 @@ export const ProfileSettingsPage: React.FC = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
+        {/* Cột trái: Form thông tin cá nhân */}
         <Card className="p-6 md:col-span-2">
           <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
             <User className="h-5 w-5 text-amber-600" />
@@ -178,40 +263,129 @@ export const ProfileSettingsPage: React.FC = () => {
           </form>
         </Card>
 
+        {/* Cột phải: Avatar Upload & Đổi mật khẩu */}
         <div className="space-y-6">
+          {/* Card Tải Ảnh Đại Diện Chuẩn File Upload */}
           <Card className="p-6">
             <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
               <Camera className="h-5 w-5 text-amber-600" />
               <h2 className="text-base font-semibold text-slate-900">Ảnh đại diện</h2>
             </div>
 
-            <div className="mb-4 flex flex-col items-center">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={fullName}
-                  className="h-20 w-20 rounded-full border border-slate-200 object-cover"
-                />
+            {/* Input file ẩn */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileInputChange}
+            />
+
+            {/* Vùng Avatar tương tác kéo thả & click */}
+            <div className="flex flex-col items-center">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                title="Nhấn để tải ảnh từ máy tính hoặc kéo thả ảnh vào đây"
+                className={`group relative h-28 w-28 cursor-pointer rounded-full overflow-hidden transition-all duration-200 shadow-md ${
+                  isDragging
+                    ? 'ring-4 ring-amber-500 scale-105'
+                    : 'ring-4 ring-amber-500/20 hover:ring-amber-500/50 hover:shadow-lg'
+                }`}
+              >
+                {displayedAvatar ? (
+                  <img
+                    src={displayedAvatar}
+                    alt={fullName}
+                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-amber-500 to-orange-500 text-3xl font-extrabold text-white">
+                    {initialLetter}
+                  </div>
+                )}
+
+                {/* Overlay khi hover */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/45 opacity-0 transition-opacity duration-200 group-hover:opacity-100 text-white">
+                  <Camera className="h-6 w-6 mb-1 text-white" />
+                  <span className="text-[11px] font-semibold tracking-wide">Đổi ảnh</span>
+                </div>
+              </div>
+
+              {/* Thông tin file khi vừa chọn xem trước */}
+              {selectedFile ? (
+                <div className="mt-3.5 flex flex-col items-center text-center w-full animate-in fade-in duration-200">
+                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 max-w-[200px] truncate">
+                    {selectedFile.name}
+                  </span>
+                  <span className="text-[11px] text-slate-500 mt-0.5">
+                    ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  </span>
+
+                  {/* Nút hành động khi có file preview */}
+                  <div className="mt-3 flex w-full gap-2">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      loading={savingAvatar}
+                      onClick={handleUploadAvatar}
+                      className="flex-1 text-xs py-2 gap-1.5"
+                    >
+                      <Check className="h-4 w-4" />
+                      Lưu ảnh
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={savingAvatar}
+                      onClick={handleCancelSelectedAvatar}
+                      className="text-xs py-2 px-3 text-slate-600 hover:text-slate-800"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-2xl font-bold text-amber-800">
-                  {fullName.charAt(0).toUpperCase() || 'U'}
+                <div className="mt-3.5 flex flex-col items-center text-center w-full">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={savingAvatar}
+                    className="w-full text-xs py-2 gap-1.5"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Tải ảnh từ máy
+                  </Button>
+
+                  {avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      disabled={savingAvatar}
+                      className="mt-2 flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-red-600 transition cursor-pointer"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Xóa ảnh hiện tại
+                    </button>
+                  )}
+
+                  <p className="mt-2 text-[11px] text-slate-500 leading-normal">
+                    Hỗ trợ JPG, PNG, WEBP (Tối đa 5MB).
+                    <br />
+                    Kéo & thả ảnh trực tiếp vào vòng tròn.
+                  </p>
                 </div>
               )}
             </div>
-
-            <form onSubmit={handleSaveAvatar} className="space-y-3">
-              <Input
-                label="URL Ảnh đại diện"
-                placeholder="https://..."
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-              />
-              <Button type="submit" variant="secondary" loading={savingAvatar} className="w-full">
-                Cập nhật Avatar
-              </Button>
-            </form>
           </Card>
 
+          {/* Card Đổi mật khẩu */}
           <Card className="p-6">
             <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
               <ShieldCheck className="h-5 w-5 text-amber-600" />

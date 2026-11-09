@@ -86,4 +86,20 @@ export const authApi = {
     const res = await httpClient.put<ApiResponse<UserProfile>>('/profile/me/avatar', { avatarUrl });
     return res.data.data;
   },
+
+  async uploadAvatarFile(file: File): Promise<UserProfile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await httpClient.post<ApiResponse<UserProfile>>('/profile/me/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data.data;
+  },
+
+  async deleteAvatar(): Promise<UserProfile> {
+    const res = await httpClient.delete<ApiResponse<UserProfile>>('/profile/me/avatar');
+    return res.data.data;
+  },
 };
