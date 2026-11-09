@@ -21,6 +21,7 @@ import { httpClient } from '../../shared/api/httpClient';
 import { useAuthStore } from '../../shared/store/useAuthStore';
 import type { ApiResponse, UserProfile, UserRole } from '../../shared/types/api';
 import { Badge, Button } from '../../shared/ui/primitives';
+import { BeeBotAssistant } from '@/features/ai/components/BeeBotAssistant';
 
 interface MaintenanceStatus {
   enabled: boolean;
@@ -253,6 +254,9 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+
+      {/* Trợ lý Học tập AI BeeBot (UC22, UC23) */}
+      <BeeBotAssistant />
     </div>
   );
 }
