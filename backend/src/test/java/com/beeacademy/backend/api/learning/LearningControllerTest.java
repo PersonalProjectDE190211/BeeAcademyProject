@@ -98,7 +98,8 @@ class LearningControllerTest {
 
         LearningLessonResult result = new LearningLessonResult(
                 lessonId, chapterId, "Bài 1: Giới thiệu", 1,
-                "https://video.mp4", 600, false, false, 120, 20.0
+                "https://video.mp4", 600, false, false, 120, 20.0,
+                List.of()
         );
 
         when(getLearningLessonUseCase.execute(studentId, courseId, lessonId)).thenReturn(result);
