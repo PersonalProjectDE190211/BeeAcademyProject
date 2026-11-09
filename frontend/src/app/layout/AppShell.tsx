@@ -175,6 +175,11 @@ export function AppShell() {
                     <img
                       src={user.avatarUrl}
                       alt={user.fullName || 'User'}
+                      style={{
+                        transform: 'translateZ(0)',
+                        backfaceVisibility: 'hidden',
+                        imageRendering: '-webkit-optimize-contrast',
+                      }}
                       className="h-10 w-10 aspect-square rounded-full object-cover object-top border-2 border-white ring-1 ring-slate-200 shrink-0 shadow-xs group-hover:scale-105 transition-transform duration-150"
                     />
                   ) : (
