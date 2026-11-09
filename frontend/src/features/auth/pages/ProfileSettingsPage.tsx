@@ -292,7 +292,7 @@ export const ProfileSettingsPage: React.FC = () => {
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
                 title="Nhấn để tải ảnh từ máy tính hoặc kéo thả ảnh vào đây"
-                className={`group relative h-28 w-28 cursor-pointer rounded-full overflow-hidden transition-all duration-200 shadow-md ${
+                className={`group relative h-32 w-32 cursor-pointer rounded-full overflow-hidden transition-all duration-200 shadow-md ${
                   isDragging
                     ? 'ring-4 ring-amber-500 scale-105'
                     : 'ring-4 ring-amber-500/20 hover:ring-amber-500/50 hover:shadow-lg'
@@ -302,7 +302,7 @@ export const ProfileSettingsPage: React.FC = () => {
                   <img
                     src={displayedAvatar}
                     alt={fullName}
-                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                    className="h-full w-full aspect-square object-cover object-top transition-transform duration-200 group-hover:scale-105"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-tr from-amber-500 to-orange-500 text-3xl font-extrabold text-white">

@@ -146,55 +146,60 @@ export function AppShell() {
         </div>
       )}
 
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-xs">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-2xs">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-6">
-            <Link to="/courses" className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white font-bold shadow-xs">
+            <Link to="/courses" className="flex items-center gap-3 group">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-white font-black text-xl shadow-xs transition-transform duration-200 group-hover:scale-105">
                 B
               </div>
               <div>
-                <span className="text-base font-extrabold tracking-tight text-slate-900">
+                <span className="text-lg font-black tracking-tight text-slate-900 group-hover:text-primary transition-colors">
                   BeeAcademy
                 </span>
-                <span className="block text-[10px] font-medium text-slate-500">
-                  Nền tảng Học tập Trực tuyến K-12
+                <span className="block text-xs font-medium text-slate-500">
+                  Nền tảng Học tập Trực tuyến K–12
                 </span>
               </div>
             </Link>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3.5">
             {user ? (
               <>
                 <Link
                   to="/profile"
-                  className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1.5 hover:bg-slate-100 transition"
+                  className="flex items-center gap-3 rounded-2xl border border-slate-200/90 bg-slate-50/80 px-3.5 py-1.5 hover:bg-slate-100/90 hover:border-slate-300 transition shadow-2xs group"
                 >
                   {user.avatarUrl ? (
                     <img
                       src={user.avatarUrl}
                       alt={user.fullName || 'User'}
-                      className="h-7 w-7 rounded-full object-cover border border-slate-200 shrink-0"
+                      className="h-10 w-10 aspect-square rounded-full object-cover object-top border-2 border-white ring-1 ring-slate-200 shrink-0 shadow-xs group-hover:scale-105 transition-transform duration-150"
                     />
                   ) : (
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-fixed text-xs font-bold text-primary shrink-0">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-fixed text-sm font-bold text-primary shrink-0 shadow-xs">
                       {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                   )}
                   <div className="text-left">
-                    <p className="text-xs font-semibold text-slate-900 leading-tight">
+                    <p className="text-sm font-bold text-slate-900 leading-tight group-hover:text-primary transition-colors">
                       {user.fullName}
                     </p>
-                    <p className="text-[10px] text-slate-500">{ROLE_LABELS[user.role]}</p>
+                    <p className="text-xs text-slate-500 font-medium">{ROLE_LABELS[user.role]}</p>
                   </div>
                 </Link>
                 {user.role === 'teacher' && user.teacherApprovalStatus !== 'approved' && (
                   <Badge tone="warning">Chờ duyệt GV</Badge>
                 )}
-                <Button size="sm" variant="ghost" onClick={handleLogout} title="Đăng xuất">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  title="Đăng xuất"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50/80 hover:border-red-200 transition cursor-pointer shadow-2xs"
+                >
                   <LogOut className="h-4 w-4" />
-                </Button>
+                </button>
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -214,9 +219,9 @@ export function AppShell() {
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6 sm:px-6">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6 sm:px-6 lg:px-8">
         <aside className="hidden w-60 shrink-0 md:block">
-          <nav className="sticky top-22 space-y-1 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-2xs">
+          <nav className="sticky top-24 space-y-1 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-2xs">
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
               return (
