@@ -130,6 +130,8 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         },
       });
 
+      const targetWidth = Math.min(Math.max(googleButtonRef.current.clientWidth || 400, 250), 400);
+
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         type: 'standard',
         theme: 'outline',
@@ -137,7 +139,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         text: 'continue_with',
         shape: 'rectangular',
         logo_alignment: 'left',
-        width: 380,
+        width: targetWidth,
         locale: 'vi',
       });
     };
@@ -171,8 +173,8 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   return (
     <div className={`w-full ${className}`}>
       {isRealClientIdConfigured ? (
-        <div className="flex justify-center">
-          <div ref={googleButtonRef} />
+        <div className="w-full flex justify-start">
+          <div ref={googleButtonRef} className="w-full max-w-[400px]" />
         </div>
       ) : (
         <button
