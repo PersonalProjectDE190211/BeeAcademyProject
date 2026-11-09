@@ -38,8 +38,272 @@
   --radius-md: 0.75rem;
 }
 
+/*
+ * Auth design tokens (Login / Register / Forgot password).
+ * "static" bảo đảm biến CSS luôn được xuất ra vì các class .auth-* bên dưới
+ * tham chiếu trực tiếp qua var(), không chỉ qua utility của Tailwind.
+ */
+@theme static {
+  --color-brand-700: #b02e00;
+  --color-brand-500: #d4501a;
+  --color-brand-300: #e8743a;
+  --color-on-brand-muted: #fff0e6;
+  --color-cream: #fffaf5;
+  --color-blush: #fff4ec;
+  --color-peach: #ffd9c2;
+  --color-butter: #ffe9b8;
+  --color-sand: #e7ddd5;
+  --color-sand-strong: #d9b9a4;
+  --color-sand-soft: #f3ece6;
+  --color-ink: #1c1917;
+  --color-ink-muted: #57534e;
+}
+
 @layer base {
   body {
     @apply bg-surface text-on-surface font-sans;
+  }
+}
+
+/* ==========================================================================
+   Auth experience — "Warm Terracotta Motion"
+   Một chuyển động vào trang có chủ đích + chuyển động nền chậm ở panel thương hiệu.
+   Mọi animation bị tắt khi người dùng bật prefers-reduced-motion.
+   ========================================================================== */
+@layer components {
+  .auth-side {
+    background: linear-gradient(
+      135deg,
+      var(--color-brand-700) 0%,
+      var(--color-brand-500) 55%,
+      var(--color-brand-300) 100%
+    );
+    background-size: 200% 200%;
+    animation: auth-flow 14s ease-in-out infinite;
+  }
+
+  /* Lớp scrim tối nhẹ phía sau khối chữ để giữ tương phản chữ trắng khi gradient trôi sang vùng sáng */
+  .auth-side::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 55% at 22% 58%, rgb(90 22 0 / 0.28), transparent 70%);
+    pointer-events: none;
+  }
+
+  .auth-hex {
+    position: absolute;
+    color: #fff;
+    pointer-events: none;
+    animation: auth-float 9s ease-in-out infinite;
+  }
+  .auth-hex--slow {
+    animation-duration: 12s;
+    animation-delay: -4s;
+  }
+  .auth-hex--slower {
+    animation-duration: 15s;
+    animation-delay: -8s;
+  }
+
+  .auth-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(60px);
+    pointer-events: none;
+    animation: auth-float 12s ease-in-out infinite;
+  }
+  .auth-blob--late {
+    animation-delay: -6s;
+  }
+
+  .auth-rise {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: auth-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
+  .auth-card {
+    opacity: 0;
+    animation:
+      auth-rise 0.9s 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards,
+      auth-bob 6s 1.8s ease-in-out infinite;
+  }
+
+  .auth-bar {
+    width: 0;
+    animation: auth-fill 1.6s 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+
+  .auth-input {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px;
+    border: 1.5px solid var(--color-sand);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--color-ink);
+    font-size: 15px;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .auth-input::placeholder {
+    color: #a8a29e;
+  }
+  .auth-input:hover {
+    border-color: var(--color-sand-strong);
+  }
+  .auth-input:focus {
+    outline: none;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 4px rgb(212 80 26 / 0.14);
+  }
+  .auth-input[aria-invalid='true'] {
+    border-color: #dc2626;
+  }
+  .auth-input[aria-invalid='true']:focus {
+    box-shadow: 0 0 0 4px rgb(220 38 38 / 0.14);
+  }
+  .auth-input:disabled {
+    background: var(--color-sand-soft);
+    cursor: not-allowed;
+  }
+
+  .auth-cta {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--color-brand-700), var(--color-brand-500));
+    box-shadow: 0 8px 20px rgb(176 46 0 / 0.25);
+    transition:
+      transform 0.25s,
+      box-shadow 0.25s,
+      opacity 0.2s;
+  }
+  .auth-cta:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgb(176 46 0 / 0.32);
+  }
+  .auth-cta:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .auth-cta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.35), transparent);
+    transform: skewX(-20deg);
+    animation: auth-shine 4.5s 2s infinite;
+  }
+  .auth-cta:disabled::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  .auth-gbtn {
+    height: 48px;
+    border: 1.5px solid var(--color-sand);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--color-ink);
+    transition:
+      background 0.25s,
+      border-color 0.25s,
+      transform 0.25s;
+  }
+  .auth-gbtn:hover:not(:disabled) {
+    background: var(--color-blush);
+    border-color: var(--color-sand-strong);
+    transform: translateY(-1px);
+  }
+
+  .auth-link {
+    color: var(--color-brand-700);
+    font-weight: 600;
+    border-radius: 4px;
+    text-underline-offset: 3px;
+  }
+  .auth-link:hover {
+    text-decoration: underline;
+  }
+  .auth-link:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes auth-flow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@keyframes auth-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-26px) rotate(12deg);
+  }
+}
+@keyframes auth-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes auth-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes auth-fill {
+  to {
+    width: var(--bar-to, 82%);
+  }
+}
+@keyframes auth-shine {
+  0%,
+  60% {
+    left: -60%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-side,
+  .auth-hex,
+  .auth-blob,
+  .auth-rise,
+  .auth-card,
+  .auth-bar,
+  .auth-cta::after {
+    animation: none !important;
+  }
+  .auth-rise,
+  .auth-card {
+    opacity: 1;
+    transform: none;
+  }
+  .auth-bar {
+    width: var(--bar-to, 82%);
+  }
+  .auth-cta,
+  .auth-gbtn {
+    transition: none;
   }
 }

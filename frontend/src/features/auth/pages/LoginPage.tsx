@@ -14,6 +14,7 @@ export const LoginPage: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -51,119 +52,158 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
-        {/* Left Column: Branded Terracotta Banner */}
-        <div className="lg:col-span-5 xl:col-span-5">
-          <AuthLeftBanner
-            title={'Học tập vui hơn,\ntiến bộ mỗi ngày'}
-            subtitle="Nền tảng học tập trực tuyến K-12 với bài giảng, bài kiểm tra và theo dõi tiến độ dành cho học sinh và phụ huynh."
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 text-ink">
+      {/* Left Branded Animated Panel */}
+      <AuthLeftBanner
+        title={'Học tập vui hơn,\ntiến bộ mỗi ngày'}
+        subtitle="Bài giảng sinh động, bài kiểm tra có kết quả ngay và theo dõi tiến độ dành cho học sinh và phụ huynh."
+      />
+
+      {/* Right Warm Cream Form Panel */}
+      <main className="relative overflow-hidden flex items-center justify-center p-6 sm:p-12 bg-cream">
+        {/* Ambient blurred blobs */}
+        <div
+          className="auth-blob bg-peach"
+          style={{ width: 300, height: 300, top: -80, right: -80, opacity: 0.7 }}
+          aria-hidden="true"
+        />
+        <div
+          className="auth-blob auth-blob--late bg-butter"
+          style={{ width: 240, height: 240, bottom: -60, left: -60, opacity: 0.7 }}
+          aria-hidden="true"
+        />
+
+        <div className="relative z-10 w-full max-w-[440px] flex flex-col gap-5">
+          {/* Header */}
+          <div
+            className="auth-rise"
+            style={{ '--rise-delay': '100ms' } as React.CSSProperties}
+          >
+            <h2 className="text-[30px] sm:text-[32px] font-bold tracking-tight text-ink mb-1.5">
+              Chào mừng trở lại
+            </h2>
+            <p className="text-[15px] text-ink-muted">
+              Chưa có tài khoản?{' '}
+              <Link to="/register" className="auth-link">
+                Đăng ký ngay
+              </Link>
+            </p>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <GoogleSignInButton
+            mode="signin"
+            text="Tiếp tục với Google"
+            className="auth-rise"
+            style={{ '--rise-delay': '250ms' } as React.CSSProperties}
           />
-        </div>
 
-        {/* Right Column: Login Form */}
-        <div className="lg:col-span-7 xl:col-span-7 flex flex-col justify-center px-6 py-10 sm:px-12 lg:px-16 xl:px-24">
-          <div className="mx-auto w-full max-w-md">
-            {/* Form Title & Subtitle */}
-            <div className="mb-6">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Đăng nhập
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Chưa có tài khoản?{' '}
-                <Link to="/register" className="font-semibold text-[#b8320c] hover:underline">
-                  Đăng ký ngay
-                </Link>
-              </p>
+          {/* Divider */}
+          <div
+            className="auth-rise flex items-center gap-3.5 text-[13px] text-[#78716c]"
+            style={{ '--rise-delay': '400ms' } as React.CSSProperties}
+          >
+            <span className="flex-1 h-px bg-[#eadfd6]" />
+            <span>hoặc dùng email</span>
+            <span className="flex-1 h-px bg-[#eadfd6]" />
+          </div>
+
+          {/* Error Alert */}
+          {errorMessage && (
+            <div
+              role="alert"
+              className="rounded-[14px] border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-700"
+            >
+              {errorMessage}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+            <div
+              className="auth-rise"
+              style={{ '--rise-delay': '550ms' } as React.CSSProperties}
+            >
+              <label
+                htmlFor="login-email"
+                className="block text-[14px] font-semibold text-ink mb-2"
+              >
+                Email
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                placeholder="ten@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                disabled={loading}
+                className="auth-input"
+              />
             </div>
 
-            {/* Google Sign-in Button */}
-            <GoogleSignInButton
-              mode="signin"
-              text="Tiếp tục với Google"
-              className="mb-5"
-            />
-
-            {/* Divider: hoặc dùng email */}
-            <div className="relative mb-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-slate-400">hoặc dùng email</span>
-              </div>
-            </div>
-
-            {/* Error Message Alert */}
-            {errorMessage && (
-              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs sm:text-sm text-red-700">
-                {errorMessage}
-              </div>
-            )}
-
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Email
+            <div
+              className="auth-rise"
+              style={{ '--rise-delay': '700ms' } as React.CSSProperties}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="login-password"
+                  className="text-[14px] font-semibold text-ink"
+                >
+                  Mật khẩu
                 </label>
-                <input
-                  type="email"
-                  placeholder="ten@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#b8320c] focus:outline-hidden focus:ring-1 focus:ring-[#b8320c]"
-                />
+                <Link to="/forgot-password" className="auth-link text-[14px]">
+                  Quên mật khẩu?
+                </Link>
               </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-semibold text-slate-700">
-                    Mật khẩu
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs font-medium text-[#b8320c] hover:underline"
-                  >
-                    Quên mật khẩu?
-                  </Link>
-                </div>
+              <div className="relative">
                 <input
-                  type="password"
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Nhập mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#b8320c] focus:outline-hidden focus:ring-1 focus:ring-[#b8320c]"
+                  disabled={loading}
+                  className="auth-input pr-12"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-semibold text-ink-muted hover:text-brand-700 transition cursor-pointer"
+                >
+                  {showPassword ? 'Ẩn' : 'Hiện'}
+                </button>
               </div>
+            </div>
 
-              {/* Submit button */}
+            <div
+              className="auth-rise flex flex-col gap-4"
+              style={{ '--rise-delay': '850ms' } as React.CSSProperties}
+            >
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl bg-[#b8320c] hover:bg-[#a12b0a] text-white font-bold py-3 text-sm transition shadow-sm cursor-pointer disabled:opacity-60 mt-2"
+                className="auth-cta h-[52px] w-full rounded-[14px] text-[16px] font-bold text-white cursor-pointer disabled:opacity-60"
               >
                 {loading ? 'Đang đăng nhập...' : 'Đăng nhập hệ thống'}
               </button>
-            </form>
 
-            {/* Teacher note footer */}
-            <p className="mt-8 text-center text-xs text-slate-500 leading-relaxed">
-              Bạn là giáo viên? Tài khoản giáo viên được cấp sau khi duyệt hồ sơ. Gửi hồ sơ đến{' '}
-              <a
-                href="mailto:Thanhdatvv05@gmail.com"
-                className="font-medium text-[#b8320c] underline hover:text-[#9c2909]"
-              >
-                Thanhdatvv05@gmail.com
-              </a>.
-            </p>
-          </div>
+              <p className="text-center text-[13px] text-ink-muted leading-relaxed pt-1">
+                Bạn là giáo viên? Tài khoản giáo viên được cấp sau khi duyệt hồ sơ. Gửi hồ sơ đến{' '}
+                <a href="mailto:Thanhdatvv05@gmail.com" className="auth-link">
+                  Thanhdatvv05@gmail.com
+                </a>
+                .
+              </p>
+            </div>
+          </form>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

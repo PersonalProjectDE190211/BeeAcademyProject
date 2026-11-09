@@ -41,6 +41,7 @@ interface GoogleSignInButtonProps {
   accountType?: 'student' | 'parent';
   text?: string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
@@ -48,6 +49,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   accountType = 'student',
   text,
   className = '',
+  style,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,7 +63,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
   const isRealClientIdConfigured =
-    clientId &&
+    Boolean(clientId) &&
     !clientId.includes('your-google-client-id') &&
     clientId.endsWith('.apps.googleusercontent.com');
 
@@ -115,6 +117,8 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         script.defer = true;
         script.onload = () => initGoogleSignIn();
         document.body.appendChild(script);
+      } else {
+        existingScript.addEventListener('load', initGoogleSignIn);
       }
     };
 
@@ -130,8 +134,6 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         },
       });
 
-      const targetWidth = Math.min(Math.max(googleButtonRef.current.clientWidth || 400, 250), 400);
-
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         type: 'standard',
         theme: 'outline',
@@ -139,7 +141,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         text: 'continue_with',
         shape: 'rectangular',
         logo_alignment: 'left',
-        width: targetWidth,
+        width: 400,
         locale: 'vi',
       });
     };
@@ -164,133 +166,141 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   const handleButtonClick = () => {
     if (isRealClientIdConfigured && window.google?.accounts?.id) {
       window.google.accounts.id.prompt();
-    } else {
-      // Khi chưa cấu hình Client ID thật hoặc đang dev localhost
+    } else if (!isRealClientIdConfigured) {
       setShowDevModal(true);
     }
   };
 
   return (
-    <div className={`w-full ${className}`}>
-      {isRealClientIdConfigured ? (
-        <div className="w-full flex justify-start">
-          <div ref={googleButtonRef} className="w-full max-w-[400px]" />
-        </div>
-      ) : (
+    <div className={`w-full ${className}`} style={style}>
+      <div className="relative w-full">
+        {/* Custom Visual Button (.auth-gbtn) — 100% full width & aligned with form inputs */}
         <button
           type="button"
           onClick={handleButtonClick}
           disabled={loading}
-          className="relative flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 hover:border-slate-400 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+          className="auth-gbtn flex w-full items-center justify-center gap-2.5 px-4 text-[15px] font-semibold cursor-pointer disabled:opacity-60"
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
             <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              fill="#EA4335"
+              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
             />
             <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              fill="#4285F4"
+              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
             />
             <path
               fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
             />
             <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              fill="#34A853"
+              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
             />
           </svg>
-          <span className="text-sm font-medium text-slate-700">
-            {loading
-              ? 'Đang xác thực với Google...'
-              : text || 'Tiếp tục với Google'}
+          <span>
+            {loading ? 'Đang xác thực với Google...' : text || 'Tiếp tục với Google'}
           </span>
         </button>
-      )}
 
-      {/* Dev Mode Modal - Cho phép lập trình viên kiểm thử Google Auth ngay lập tức */}
+        {/* Transparent Interactive Google GIS Overlay for real OAuth popup */}
+        {isRealClientIdConfigured && !loading && (
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden rounded-[14px] opacity-[0.01] cursor-pointer"
+          >
+            <div ref={googleButtonRef} className="w-full scale-x-115 flex justify-center" />
+          </div>
+        )}
+      </div>
+
+      {/* Dev Mode Modal - Cho phép lập trình viên kiểm thử khi chưa cấu hình Client ID */}
       {showDevModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-sand">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blush text-brand-700">
+                <svg className="h-5 w-5" viewBox="0 0 48 48">
                   <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    fill="#EA4335"
+                    d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
                   />
                   <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    fill="#4285F4"
+                    d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
                   />
                   <path
                     fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
                   />
                   <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    fill="#34A853"
+                    d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
                   />
                 </svg>
               </div>
               <div>
-                <h3 className="font-bold text-slate-900">Mô phỏng Đăng nhập Google (Dev Mode)</h3>
-                <p className="text-xs text-slate-500">Kiểm thử toàn diện luồng xác thực Google</p>
+                <h3 className="font-bold text-ink">Mô phỏng Đăng nhập Google (Dev Mode)</h3>
+                <p className="text-xs text-ink-muted">Kiểm thử toàn diện luồng xác thực Google</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 mb-4 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-              Chưa cấu hình Google Client ID thật trong <code className="text-amber-600 font-semibold">.env</code>. Hệ thống sẽ sinh Google ID Token hợp lệ để backend giải mã và liên kết qua <code className="text-amber-600 font-semibold">ExternalLogin</code>.
+            <p className="text-xs text-ink-muted mb-4 bg-cream p-3 rounded-xl border border-sand">
+              Chưa cấu hình Google Client ID thật trong{' '}
+              <code className="text-brand-700 font-semibold">.env</code>. Hệ thống sẽ sinh Google ID
+              Token hợp lệ để backend giải mã và liên kết qua{' '}
+              <code className="text-brand-700 font-semibold">ExternalLogin</code>.
             </p>
 
             <form onSubmit={handleDevMockLogin} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1">
                   Email tài khoản Google
                 </label>
                 <input
                   type="email"
                   value={devEmail}
                   onChange={(e) => setDevEmail(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-hidden"
+                  className="auth-input"
                   placeholder="name@gmail.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1">
                   Họ và tên hiển thị
                 </label>
                 <input
                   type="text"
                   value={devFullName}
                   onChange={(e) => setDevFullName(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-amber-500 focus:outline-hidden"
+                  className="auth-input"
                   placeholder="Nguyễn Văn A"
                   required
                 />
               </div>
 
               {mode === 'signup' && (
-                <div className="text-xs text-slate-500 bg-amber-50 border border-amber-200 p-2 rounded-lg">
-                  Vai trò đăng ký: <strong className="uppercase text-amber-700">{accountType}</strong>
+                <div className="text-xs text-ink-muted bg-blush border border-sand p-2.5 rounded-xl">
+                  Vai trò đăng ký:{' '}
+                  <strong className="uppercase text-brand-700">{accountType}</strong>
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowDevModal(false)}
-                  className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  className="flex-1 rounded-xl border border-sand px-3 py-2.5 text-xs font-semibold text-ink hover:bg-blush cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="auth-cta flex-1 rounded-xl px-3 py-2.5 text-xs font-semibold text-white cursor-pointer disabled:opacity-60"
                 >
                   {loading ? 'Đang gửi...' : 'Xác nhận Đăng nhập'}
                 </button>
@@ -311,4 +321,3 @@ function hashCode(str: string): number {
   }
   return hash;
 }
-
