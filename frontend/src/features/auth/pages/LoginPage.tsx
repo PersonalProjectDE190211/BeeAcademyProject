@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { GraduationCap, Lock, Mail } from 'lucide-react';
 import { authApi } from '../api/authApi';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { useAuthStore } from '@/shared/store/useAuthStore';
 import { getApiErrorMessage } from '@/shared/types/api';
 import { Button, Card, Input } from '@/shared/ui/primitives';
@@ -68,6 +69,17 @@ export const LoginPage: React.FC = () => {
             {errorMessage}
           </div>
         )}
+
+        <GoogleSignInButton mode="signin" className="mb-5" />
+
+        <div className="relative mb-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-slate-500 font-medium">Hoặc tiếp tục với email</span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

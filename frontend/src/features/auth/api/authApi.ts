@@ -10,7 +10,12 @@ export interface RegisterPayload {
   email: string;
   password: string;
   fullName: string;
-  role: 'student' | 'teacher' | 'parent';
+  role: 'STUDENT' | 'PARENT';
+}
+
+export interface GoogleAuthPayload {
+  idToken: string;
+  accountType?: 'student' | 'parent';
 }
 
 export interface AuthResponseData {
@@ -38,6 +43,11 @@ export interface ResetPasswordPayload {
 export const authApi = {
   async login(payload: LoginPayload): Promise<AuthResponseData> {
     const res = await httpClient.post<ApiResponse<AuthResponseData>>('/auth/login', payload);
+    return res.data.data;
+  },
+
+  async loginWithGoogle(payload: GoogleAuthPayload): Promise<AuthResponseData> {
+    const res = await httpClient.post<ApiResponse<AuthResponseData>>('/auth/google', payload);
     return res.data.data;
   },
 

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { UserPlus } from 'lucide-react';
+import { Mail, UserPlus } from 'lucide-react';
 import { authApi } from '../api/authApi';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { getApiErrorMessage } from '@/shared/types/api';
 import { Button, Card, Input, Select } from '@/shared/ui/primitives';
 
@@ -12,7 +13,7 @@ export const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
+  const [role, setRole] = useState<'student' | 'parent'>('student');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -34,14 +35,10 @@ export const RegisterPage: React.FC = () => {
         fullName: fullName.trim(),
         email: email.trim(),
         password,
-        role,
+        role: role.toUpperCase() as 'STUDENT' | 'PARENT',
       });
 
-      if (role === 'teacher') {
-        toast.success('Đăng ký tài khoản Giáo viên thành công! Hồ sơ của bạn đang chờ Admin phê duyệt.');
-      } else {
-        toast.success('Đăng ký tài khoản thành công! Vui lòng đăng nhập.');
-      }
+      toast.success('Đăng ký tài khoản thành công! Vui lòng đăng nhập.');
       navigate('/login');
     } catch (err) {
       const msg = getApiErrorMessage(err, 'Không thể đăng ký tài khoản.');
@@ -71,6 +68,48 @@ export const RegisterPage: React.FC = () => {
           </div>
         )}
 
+        {/* Đăng ký nhanh bằng Google */}
+        <div className="space-y-3 mb-5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-700">Loại tài khoản:</span>
+            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setRole('student')}
+                className={`rounded-md px-2.5 py-1 font-medium transition cursor-pointer ${
+                  role === 'student'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                🎓 Học sinh
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('parent')}
+                className={`rounded-md px-2.5 py-1 font-medium transition cursor-pointer ${
+                  role === 'parent'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                👨‍👩‍👧 Phụ huynh
+              </button>
+            </div>
+          </div>
+
+          <GoogleSignInButton mode="signup" accountType={role} />
+        </div>
+
+        <div className="relative mb-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-slate-500 font-medium">Hoặc đăng ký bằng email</span>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Họ và tên đầy đủ"
@@ -92,12 +131,29 @@ export const RegisterPage: React.FC = () => {
           <Select
             label="Vai trò tham gia"
             value={role}
-            onChange={(e) => setRole(e.target.value as 'student' | 'teacher' | 'parent')}
+            onChange={(e) => setRole(e.target.value as 'student' | 'parent')}
           >
-            <option value="student">Học sinh (Học tập & Làm bài kiểm tra)</option>
-            <option value="parent">Phụ huynh (Theo dõi & Thanh toán hộ con)</option>
-            <option value="teacher">Giáo viên (Giảng dạy - Cần Admin duyệt)</option>
+            <option value="student">🎓 Học sinh (Học tập & Làm bài kiểm tra)</option>
+            <option value="parent">👨‍👩‍👧 Phụ huynh (Đồng hành & Quản lý con)</option>
           </Select>
+
+          {/* Ghi chú hướng dẫn cho Giáo viên */}
+          <div className="rounded-xl border border-amber-200/70 bg-amber-50/60 p-3 text-xs text-amber-900">
+            <div className="flex items-center gap-1.5 font-semibold text-amber-950 mb-0.5">
+              <Mail className="h-3.5 w-3.5 text-amber-600" />
+              Thầy/Cô có nhu cầu giảng dạy trên BeeAcademy?
+            </div>
+            <p className="text-amber-800 leading-relaxed">
+              Để bảo đảm chuẩn chất lượng sư phạm K-12, tài khoản Giáo viên được cấp sau khi duyệt thẩm định. Thầy/Cô vui lòng gửi hồ sơ đến{' '}
+              <a
+                href="mailto:admin@beeacademy.edu.vn"
+                className="font-medium text-amber-950 underline decoration-amber-400 underline-offset-2 hover:text-amber-800"
+              >
+                admin@beeacademy.edu.vn
+              </a>{' '}
+              để Ban Quản trị cấp tài khoản.
+            </p>
+          </div>
 
           <Input
             label="Mật khẩu (tối thiểu 8 ký tự)"
