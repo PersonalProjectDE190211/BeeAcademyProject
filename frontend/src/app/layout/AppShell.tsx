@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { httpClient } from '../../shared/api/httpClient';
 import { useAuthStore } from '../../shared/store/useAuthStore';
-import type { ApiResponse, UserRole } from '../../shared/types/api';
+import type { ApiResponse, UserProfile, UserRole } from '../../shared/types/api';
 import { Badge, Button } from '../../shared/ui/primitives';
 
 interface MaintenanceStatus {
@@ -61,9 +61,27 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export function AppShell() {
-  const { user, clearSession } = useAuthStore();
+  const { user, updateUser, clearSession } = useAuthStore();
   const navigate = useNavigate();
   const [maintenance, setMaintenance] = useState<MaintenanceStatus | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    httpClient
+      .get<ApiResponse<UserProfile>>('/profile/me')
+      .then((res) => {
+        if (active && res.data?.data) {
+          updateUser(res.data.data);
+        }
+      })
+      .catch(() => {
+        // Ignore network errors
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -151,11 +169,19 @@ export function AppShell() {
               <>
                 <Link
                   to="/profile"
-                  className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1.5 hover:bg-slate-100"
+                  className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-1.5 hover:bg-slate-100 transition"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-fixed text-xs font-bold text-primary">
-                    {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
-                  </div>
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.fullName || 'User'}
+                      className="h-7 w-7 rounded-full object-cover border border-slate-200 shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-fixed text-xs font-bold text-primary shrink-0">
+                      {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                  )}
                   <div className="text-left">
                     <p className="text-xs font-semibold text-slate-900 leading-tight">
                       {user.fullName}
