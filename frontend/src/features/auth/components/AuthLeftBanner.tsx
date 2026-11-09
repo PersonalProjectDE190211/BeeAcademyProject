@@ -55,3 +55,4 @@ export const AuthLeftBanner: React.FC<AuthLeftBannerProps> = ({
     </div>
   );
 };
+
