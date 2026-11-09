@@ -41,6 +41,8 @@ jobs:
           chmod +x mvnw
 
       - name: Run Maven Verify (Compile, Test, Package)
+        env:
+          MAVEN_PROJECTBASEDIR: ${{ github.workspace }}/backend
         run: ./mvnw -B clean verify
 
       - name: Validate Dockerfile Build

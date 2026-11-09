@@ -4,3 +4,4 @@
 # Giữ nguyên Unix LF cho các script shell và Maven wrapper
 backend/mvnw text eol=lf
 *.sh text eol=lf
+

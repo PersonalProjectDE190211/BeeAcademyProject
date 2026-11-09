@@ -28,5 +28,7 @@ if [ ! -f "$WRAPPER_JAR" ]; then
   fi
 fi
 
-DISTRIBUTION_URL=$(grep distributionUrl "$WRAPPER_PROPERTIES" | cut -d= -f2)
-exec "$JAVACMD" -classpath "$WRAPPER_JAR" org.apache.maven.wrapper.MavenWrapperMain "$DISTRIBUTION_URL" "$@"
+exec "$JAVACMD" \
+  "-Dmaven.multiModuleProjectDirectory=$MAVEN_PROJECTBASEDIR" \
+  -classpath "$WRAPPER_JAR" \
+  org.apache.maven.wrapper.MavenWrapperMain "$@"
