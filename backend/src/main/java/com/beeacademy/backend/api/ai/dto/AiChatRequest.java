@@ -10,11 +10,15 @@ public record AiChatRequest(
         String context,
         UUID lessonId,
         UUID courseId,
-        List<ChatMessageDto> history
+        List<ChatMessageDto> history,
+        UUID conversationId
 ) {
     public record ChatMessageDto(
             String role, // "user" or "model"
             String text
     ) {}
-}
 
+    public AiChatRequest(String message, String context, UUID lessonId, UUID courseId, List<ChatMessageDto> history) {
+        this(message, context, lessonId, courseId, history, null);
+    }
+}

@@ -118,7 +118,7 @@ app:
     # Lấy key tại: https://aistudio.google.com/app/apikey
     # Đặt vào backend/.env: GEMINI_API_KEY=your_key_here
     api-key: ${GEMINI_API_KEY:}
-    model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+    model: ${GEMINI_MODEL:gemini-2.5-flash}
 
 # ============================================================================
 # Cloudinary - Lưu trữ và phân phối Media (Ảnh đại diện, Thumbnail, Video bài giảng)

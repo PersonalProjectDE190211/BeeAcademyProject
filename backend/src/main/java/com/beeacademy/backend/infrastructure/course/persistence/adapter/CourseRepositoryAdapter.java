@@ -118,6 +118,10 @@ public class CourseRepositoryAdapter implements CourseRepositoryPort {
 
         CourseStatus status = CourseStatus.valueOf(entity.getStatus().toUpperCase());
         MoneyVnd price = MoneyVnd.of(entity.getPriceVnd());
+        List<Integer> grades = new ArrayList<>();
+        if (entity.getGrades() != null) {
+            grades.addAll(Arrays.asList(entity.getGrades()));
+        }
 
         return new Course(
                 entity.getId(),
@@ -129,7 +133,7 @@ public class CourseRepositoryAdapter implements CourseRepositoryPort {
                 entity.getThumbnailUrl(),
                 price,
                 status,
-                new ArrayList<>(), // grades
+                grades,
                 entity.getTotalChapters(),
                 entity.getTotalLessons(),
                 entity.getTotalDurationSec(),
@@ -144,6 +148,10 @@ public class CourseRepositoryAdapter implements CourseRepositoryPort {
     }
 
     private CourseJpaEntity toEntity(Course domain) {
+        Integer[] grades = domain.getGrades() != null
+                ? domain.getGrades().toArray(new Integer[0])
+                : new Integer[0];
+
         CourseJpaEntity courseEntity = new CourseJpaEntity(
                 domain.getId(),
                 domain.getTeacherId(),
@@ -154,6 +162,7 @@ public class CourseRepositoryAdapter implements CourseRepositoryPort {
                 domain.getThumbnailUrl(),
                 domain.getPrice().amount(),
                 null,
+                grades,
                 domain.getStatus().name().toLowerCase(),
                 domain.getTotalChapters(),
                 domain.getTotalLessons(),

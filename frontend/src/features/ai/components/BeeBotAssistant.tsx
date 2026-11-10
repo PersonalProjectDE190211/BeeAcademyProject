@@ -8,6 +8,9 @@ import {
   Maximize2,
   Minimize2,
   BookOpen,
+  Star,
+  ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { aiApi, ChatMessage } from '../api/aiApi';
 import { LatexRenderer } from '@/shared/ui/LatexRenderer';
@@ -28,6 +31,7 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
 
   const [suggestions, setSuggestions] = useState<string[]>([
     'Danh mục các khóa học hiện có',
@@ -66,30 +70,66 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
     setLoading(true);
 
     try {
-      const response = await aiApi.chatWithAi({
+      const response = await aiApi.sendMessage({
+        conversationId,
         message: text,
-        context: currentLessonContext,
-        lessonId,
-        courseId,
-        history: newHistory.slice(-6),
       });
+
+      if (response.conversationId) {
+        setConversationId(response.conversationId);
+      }
 
       setMessages((prev) => [
         ...prev,
-        { role: 'model', text: response.reply },
+        {
+          role: 'model',
+          text: response.reply,
+          courses: response.courses,
+          intent: response.intent,
+        },
       ]);
 
       if (response.suggestions && response.suggestions.length > 0) {
         setSuggestions(response.suggestions);
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'model',
-          text: 'Hệ thống tư vấn đang bận xử lý hoặc kết nối bị gián đoạn. Quý khách vui lòng thử lại sau giây lát.',
-        },
-      ]);
+      // Fallback nếu API chatbot/message gặp lỗi kết nối
+      try {
+        const fallbackRes = await aiApi.chatWithAi({
+          message: text,
+          context: currentLessonContext,
+          lessonId,
+          courseId,
+          conversationId,
+          history: newHistory.slice(-6).map((m) => ({ role: m.role, text: m.text })),
+        });
+
+        if (fallbackRes.conversationId) {
+          setConversationId(fallbackRes.conversationId);
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'model',
+            text: fallbackRes.reply,
+            courses: fallbackRes.courses,
+            intent: fallbackRes.intent,
+          },
+        ]);
+
+        if (fallbackRes.suggestions && fallbackRes.suggestions.length > 0) {
+          setSuggestions(fallbackRes.suggestions);
+        }
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'model',
+            text: 'Hệ thống tư vấn đang bận xử lý hoặc kết nối bị gián đoạn. Quý khách vui lòng thử lại sau giây lát.',
+          },
+        ]);
+      }
     } finally {
       setLoading(false);
     }
@@ -103,6 +143,7 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
   };
 
   const handleClearHistory = () => {
+    setConversationId(undefined);
     setMessages([
       {
         role: 'model',
@@ -124,7 +165,7 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 rounded-full bg-slate-900 px-4 py-3 text-white shadow-lg border border-slate-700/60 transition-all duration-200 hover:bg-slate-800 hover:shadow-xl focus:outline-none"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 rounded-full bg-slate-900 px-4 py-3 text-white shadow-lg border border-slate-700/60 transition-all duration-200 hover:bg-slate-800 hover:shadow-xl focus:outline-none cursor-pointer"
           title="Tư vấn khóa học BeeAcademy"
         >
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
@@ -140,7 +181,7 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
           className={`fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all duration-200 ${
             isExpanded
               ? 'bottom-4 right-4 h-[88vh] w-[92vw] max-w-4xl'
-              : 'bottom-6 right-6 h-[600px] w-[94vw] max-w-[440px]'
+              : 'bottom-6 right-6 h-[640px] w-[94vw] max-w-[460px]'
           }`}
         >
           {/* Tiêu đề cửa sổ */}
@@ -150,9 +191,14 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
                 <MessageSquare className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-white tracking-tight truncate">
-                  Tư Vấn Khóa Học & Tuyển Sinh
-                </h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-sm font-semibold text-white tracking-tight truncate">
+                    Tư Vấn Khóa Học & Tuyển Sinh
+                  </h3>
+                  <span className="rounded bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.2 font-medium">
+                    BeeBot
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-400 truncate">
                   BeeAcademy K-12 • Trực tuyến 24/7
                 </p>
@@ -162,21 +208,21 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
             <div className="flex items-center gap-1">
               <button
                 onClick={handleClearHistory}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
                 title="Làm mới cuộc trò chuyện"
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
                 title={isExpanded ? 'Thu nhỏ' : 'Mở rộng'}
               >
                 {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
                 title="Đóng cửa sổ"
               >
                 <X className="h-4 w-4" />
@@ -201,22 +247,105 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
                 key={idx}
                 className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
               >
-                <span className="text-[10px] text-slate-400 mb-1 px-1 font-medium">
-                  {msg.role === 'user' ? 'Bạn' : 'BeeBot Tư Vấn'}
+                <span className="text-[10px] text-slate-400 mb-1 px-1 font-medium flex items-center gap-1">
+                  {msg.role === 'user' ? 'Bạn' : (
+                    <>
+                      <span>BeeBot Tư Vấn</span>
+                      <Sparkles className="h-3 w-3 text-amber-500" />
+                    </>
+                  )}
                 </span>
                 <div
-                  className={`max-w-[92%] rounded-xl px-4 py-3 shadow-xs text-sm leading-relaxed ${
+                  className={`max-w-[94%] rounded-xl px-4 py-3 shadow-xs text-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'bg-slate-900 text-white'
                       : 'bg-white border border-slate-200 text-slate-800'
                   }`}
                 >
                   {msg.role === 'model' ? (
-                    <div className="text-slate-800 font-sans">
-                      <LatexRenderer
-                        content={msg.text}
-                        onNavigate={(url) => navigate(url)}
-                      />
+                    <div>
+                      <div className="text-slate-800 font-sans">
+                        <LatexRenderer
+                          content={msg.text}
+                          onNavigate={(url) => {
+                            setIsOpen(false);
+                            navigate(url);
+                          }}
+                        />
+                      </div>
+
+                      {/* Hiển thị Course Cards riêng biệt từ dữ liệu JSON của Backend */}
+                      {msg.courses && msg.courses.length > 0 && (
+                        <div className="mt-3.5 pt-3 border-t border-slate-100 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                              Khóa học được đề xuất ({msg.courses.length})
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                              Xác thực từ hệ thống
+                            </span>
+                          </div>
+
+                          <div className="space-y-2.5">
+                            {msg.courses.map((course) => (
+                              <div
+                                key={course.id}
+                                className="group flex flex-col sm:flex-row overflow-hidden rounded-xl border border-slate-200/90 bg-white hover:border-amber-400 hover:shadow-md transition-all duration-200"
+                              >
+                                {course.thumbnailUrl && (
+                                  <div className="sm:w-32 h-28 sm:h-auto shrink-0 bg-slate-100 overflow-hidden relative">
+                                    <img
+                                      src={course.thumbnailUrl}
+                                      alt={course.title}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      loading="lazy"
+                                    />
+                                    <span className="absolute top-1.5 left-1.5 rounded bg-slate-900/80 backdrop-blur-xs px-1.5 py-0.5 text-[9px] font-semibold text-white">
+                                      {course.grade ? `Lớp ${course.grade}` : 'K-12'}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="flex-1 p-2.5 flex flex-col justify-between min-w-0">
+                                  <div>
+                                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                                      <span className="rounded-full bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                                        {course.subjectLabel}
+                                      </span>
+                                      <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-600">
+                                        <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                        {course.rating.toFixed(1)} ({course.reviewCount})
+                                      </span>
+                                    </div>
+                                    <h4 className="text-xs font-semibold text-slate-900 line-clamp-2 leading-snug group-hover:text-amber-600 transition-colors">
+                                      {course.title}
+                                    </h4>
+                                  </div>
+
+                                  <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                                    <div>
+                                      <span className="text-[9px] text-slate-400 block leading-tight">Học phí:</span>
+                                      <span className={`text-xs font-bold ${course.price === 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                        {course.price === 0 ? 'MIỄN PHÍ (0đ)' : `${course.price.toLocaleString('vi-VN')} đ`}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setIsOpen(false);
+                                        navigate(course.detailUrl);
+                                      }}
+                                      className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-slate-800 transition cursor-pointer shadow-xs shrink-0"
+                                    >
+                                      <span>Xem chi tiết</span>
+                                      <ExternalLink className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <p className="whitespace-pre-wrap">{msg.text}</p>
@@ -232,7 +361,7 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-pulse"></span>
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-pulse delay-75"></span>
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-pulse delay-150"></span>
-                  <span className="text-xs text-slate-500 ml-1">Đang tra cứu dữ liệu khóa học...</span>
+                  <span className="text-xs text-slate-500 ml-1">Đang phân tích và tra cứu dữ liệu khóa học...</span>
                 </div>
               </div>
             )}
@@ -251,7 +380,7 @@ export const BeeBotAssistant: React.FC<BeeBotAssistantProps> = ({
                     key={i}
                     onClick={() => handleSendMessage(sug)}
                     disabled={loading}
-                    className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 transition-colors text-left"
+                    className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 transition-colors text-left cursor-pointer"
                   >
                     {sug}
                   </button>

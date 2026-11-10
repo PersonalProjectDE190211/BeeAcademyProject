@@ -42,6 +42,9 @@ public class CourseJpaEntity {
     @Column(name = "sale_price_vnd")
     private Integer salePriceVnd;
 
+    @Column(name = "grades", columnDefinition = "integer[]")
+    private Integer[] grades = new Integer[0];
+
     @Column(name = "status", nullable = false, length = 25)
     private String status;
 
@@ -89,6 +92,7 @@ public class CourseJpaEntity {
                            String thumbnailUrl,
                            int priceVnd,
                            Integer salePriceVnd,
+                           Integer[] grades,
                            String status,
                            int totalChapters,
                            int totalLessons,
@@ -108,6 +112,7 @@ public class CourseJpaEntity {
         this.thumbnailUrl = thumbnailUrl;
         this.priceVnd = priceVnd;
         this.salePriceVnd = salePriceVnd;
+        this.grades = grades != null ? grades : new Integer[0];
         this.status = status;
         this.totalChapters = totalChapters;
         this.totalLessons = totalLessons;
@@ -146,6 +151,9 @@ public class CourseJpaEntity {
 
     public Integer getSalePriceVnd() { return salePriceVnd; }
     public void setSalePriceVnd(Integer salePriceVnd) { this.salePriceVnd = salePriceVnd; }
+
+    public Integer[] getGrades() { return grades != null ? grades : new Integer[0]; }
+    public void setGrades(Integer[] grades) { this.grades = grades != null ? grades : new Integer[0]; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

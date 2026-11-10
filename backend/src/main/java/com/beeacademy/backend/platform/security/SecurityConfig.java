@@ -54,6 +54,7 @@ public class SecurityConfig {
                                 "/api/public/system/maintenance",
                                 "/api/categories/**",
                                 "/api/ai/**",
+                                "/api/chatbot/**",
                                 "/api/health",
                                 "/actuator/health",
                                 "/actuator/health/**",
