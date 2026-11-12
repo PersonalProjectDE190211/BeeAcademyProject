@@ -6,8 +6,8 @@
 # ============================================================================
 
 server:
-  # Port mặc định 8080 (đổi qua biến SERVER_PORT)
-  port: ${SERVER_PORT:8080}
+  # Hỗ trợ biến PORT động của Render hoặc SERVER_PORT mặc định 8080
+  port: ${PORT:${SERVER_PORT:8080}}
   # Thêm prefix /api cho tất cả endpoint -> tránh trùng route với frontend Vite
   servlet:
     context-path: /

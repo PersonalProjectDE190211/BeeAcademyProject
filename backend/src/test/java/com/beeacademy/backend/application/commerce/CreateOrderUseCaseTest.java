@@ -123,4 +123,87 @@ class CreateOrderUseCaseTest {
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("Học sinh đã đăng ký khóa học");
     }
+
+    @Test
+    @DisplayName("Tái sử dụng đơn hàng PENDING còn hạn khi học sinh bấm mua liên tiếp (Chống Double-Click / Tạo trùng QR)")
+    void createOrder_ReuseActivePendingOrder() {
+        UUID studentId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+
+        com.beeacademy.backend.domain.commerce.OrderItem existingItem =
+                com.beeacademy.backend.domain.commerce.OrderItem.createWithTeacher(
+                        UUID.randomUUID(), courseId, teacherId, "Toán 12", MoneyVnd.of(500000), 20
+                );
+        Order existingPending = Order.create(
+                studentId, "BEE999888", "PAYOS", List.of(existingItem), MoneyVnd.ZERO, 15
+        );
+        existingPending.attachPayOsLink(999888L, "PAYOS_999888");
+
+        when(orderRepository.findByStudentId(studentId)).thenReturn(List.of(existingPending));
+
+        CreateOrderCommand command = new CreateOrderCommand(studentId, List.of(courseId), null, "PAYOS");
+        CreateOrderResult result = useCase.execute(command);
+
+        assertThat(result.orderId()).isEqualTo(existingPending.getId());
+        assertThat(result.orderCode()).isEqualTo(999888L);
+        assertThat(result.status()).isEqualTo("PENDING");
+    }
+
+    @Test
+    @DisplayName("Đơn hàng 0đ (Voucher giảm 100%) tự động chuyển sang PAID và kích hoạt Enrollment ngay lập tức")
+    void createOrder_ZeroAmountVoucher_AutoFulfills() {
+        UUID studentId = UUID.randomUUID();
+        UUID teacherId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+
+        Course course = createTestCourse(courseId, teacherId, "Toán 9", MoneyVnd.of(300000), CourseStatus.PUBLISHED);
+        com.beeacademy.backend.domain.commerce.RewardVoucher voucher100 =
+                com.beeacademy.backend.domain.commerce.RewardVoucher.createForStudent(
+                        studentId, "FREE100", "Học bổng 100%", 100, MoneyVnd.ZERO, Instant.now().plusSeconds(3600)
+                );
+
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId)).thenReturn(false);
+        when(voucherRepository.findByCode("FREE100")).thenReturn(Optional.of(voucher100));
+        when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        CreateOrderCommand command = new CreateOrderCommand(studentId, List.of(courseId), "FREE100", "PAYOS");
+        CreateOrderResult result = useCase.execute(command);
+
+        assertThat(result.totalAmountVnd()).isEqualTo(0);
+        assertThat(result.status()).isEqualTo("PAID");
+        verify(enrollmentRepository).save(any());
+    }
+
+    @Test
+    @DisplayName("Compensating Rollback: Nếu lưu DB thất bại sau khi tạo link PayOS thì gọi hủy link PayOS ngay lập tức")
+    void createOrder_DatabaseFailure_TriggersPayOsCancelCompensation() {
+        UUID studentId = UUID.randomUUID();
+        UUID courseId = UUID.randomUUID();
+        Course course = createTestCourse(courseId, UUID.randomUUID(), "Vật Lý 12", MoneyVnd.of(400000), CourseStatus.PUBLISHED);
+
+        com.beeacademy.backend.infrastructure.common.adapter.PayOsGatewayAdapter mockGateway =
+                org.mockito.Mockito.mock(com.beeacademy.backend.infrastructure.common.adapter.PayOsGatewayAdapter.class);
+        CreateOrderUseCase useCaseWithGateway = new CreateOrderUseCase(
+                orderRepository, courseRepository, enrollmentRepository, voucherRepository, mockGateway
+        );
+
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId)).thenReturn(false);
+        when(mockGateway.createPaymentLink(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyInt(), any(), any(), any()))
+                .thenAnswer(inv -> new com.beeacademy.backend.infrastructure.common.adapter.PayOsGatewayAdapter.PayOsPaymentLinkInfo(
+                        inv.getArgument(0), "LINK_LIVE", "https://pay.payos.vn/web/LINK_LIVE", "data:image/png;base64,xxx",
+                        "000201010212", "970422", "MBBank", "0348756972", "BEE ACADEMY", 400000, "BEE123", true
+                ));
+        when(orderRepository.save(any(Order.class))).thenThrow(new RuntimeException("DB Connection Lost"));
+
+        CreateOrderCommand command = new CreateOrderCommand(studentId, List.of(courseId), null, "PAYOS");
+
+        assertThatThrownBy(() -> useCaseWithGateway.execute(command))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("DB Connection Lost");
+
+        verify(mockGateway).cancelPaymentLinkSafely(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.contains("rollback"));
+    }
 }

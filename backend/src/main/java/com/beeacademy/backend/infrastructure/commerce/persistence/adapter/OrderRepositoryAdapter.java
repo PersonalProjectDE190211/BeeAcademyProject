@@ -114,6 +114,14 @@ public class OrderRepositoryAdapter implements OrderRepositoryPort {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<Order> findActivePendingOrders() {
+        return orderRepository.findByStatusOrderByCreatedAtDesc("pending").stream()
+                .map(this::loadWithItems)
+                .collect(Collectors.toList());
+    }
+
     private Order loadWithItems(OrderJpaEntity entity) {
         List<OrderItemJpaEntity> itemEntities = orderItemRepository.findByOrderId(entity.getId());
         return toDomain(entity, itemEntities);

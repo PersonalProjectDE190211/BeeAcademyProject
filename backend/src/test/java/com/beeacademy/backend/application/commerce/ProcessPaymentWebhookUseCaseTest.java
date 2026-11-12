@@ -151,5 +151,34 @@ class ProcessPaymentWebhookUseCaseTest {
         verify(orderRepository, never()).save(any(Order.class));
         verify(enrollmentRepository, never()).save(any(Enrollment.class));
     }
+
+    @Test
+    @DisplayName("Chặn giao dịch chuyển thiếu số tiền (Underpayment Protection)")
+    void processWebhook_Underpayment_Rejected() {
+        UUID studentId = UUID.randomUUID();
+        long orderCode = 55667788L;
+        String paymentRef = "BEE55667788";
+
+        OrderItem item = OrderItem.createWithTeacher(
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), "Khóa học Toán 12", MoneyVnd.of(500000), 20
+        );
+        Order order = Order.create(studentId, paymentRef, "PAYOS", List.of(item), MoneyVnd.ZERO, 15);
+        order.attachPayOsLink(orderCode, "PAYOS_" + orderCode);
+
+        when(orderRepository.findByOrderCode(orderCode)).thenReturn(Optional.of(order));
+
+        // Đơn 500.000đ nhưng chỉ chuyển 200.000đ
+        PayOsWebhookPayload payload = new PayOsWebhookPayload(
+                "00", "success", true,
+                new PayOsWebhookPayload.PayOsWebhookData(orderCode, 200000, paymentRef, "123", "FT999", "2026-05-01", "VND", "PLINK", "00", "success"),
+                "signature"
+        );
+
+        WebhookProcessResult result = useCase.execute(payload);
+
+        assertThat(result.success()).isFalse();
+        assertThat(result.message()).contains("nhỏ hơn giá trị đơn hàng");
+        verify(enrollmentRepository, never()).save(any(Enrollment.class));
+    }
 }
 

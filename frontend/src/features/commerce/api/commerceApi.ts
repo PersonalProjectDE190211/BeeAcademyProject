@@ -24,6 +24,10 @@ export interface CreateOrderResultDto {
   status: string;
   expiresAt: string;
   items: OrderItemDto[];
+  bankBin?: string;
+  bankName?: string;
+  accountNumber?: string;
+  accountName?: string;
 }
 
 export interface OrderDto {
@@ -40,6 +44,12 @@ export interface OrderDto {
   createdAt: string;
   updatedAt: string;
   items: OrderItemDto[];
+  checkoutUrl?: string;
+  qrCodeUrl?: string;
+  bankBin?: string;
+  bankName?: string;
+  accountNumber?: string;
+  accountName?: string;
 }
 
 export interface TeacherBankAccountDto {
@@ -99,6 +109,14 @@ export const commerceApi = {
 
   async getMyOrders(): Promise<OrderDto[]> {
     const res = await httpClient.get<ApiResponse<OrderDto[]>>('/student/orders');
+    return res.data.data;
+  },
+
+  async verifyOrderPayment(orderId: string): Promise<OrderDto> {
+    const res = await httpClient.post<ApiResponse<OrderDto>>(
+      `/student/orders/${orderId}/verify`,
+      {}
+    );
     return res.data.data;
   },
 

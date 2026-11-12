@@ -136,15 +136,24 @@ public class Order extends AbstractAggregateRoot {
      * Xác nhận thanh toán thành công (UC10 - PayOS Webhook / SePay Callback).
      */
     public void markPaid(String confirmedPaymentRef, Long assignedOrderCode, Instant paymentTime) {
+        markPaid(confirmedPaymentRef, assignedOrderCode, paymentTime, false);
+    }
+
+    /**
+     * Xác nhận thanh toán thành công.
+     * Khi forceAcceptVerifiedPayment = true (dòng tiền thực tế đã được ngân hàng/PayOS xác nhận thành công),
+     * cho phép ghi nhận PAID ngay cả khi đơn vừa chạm ngưỡng EXPIRED hoặc CANCELLED do độ trễ mạng (Grace Period).
+     */
+    public void markPaid(String confirmedPaymentRef, Long assignedOrderCode, Instant paymentTime, boolean forceAcceptVerifiedPayment) {
         if (this.status == OrderStatus.PAID) {
             return; // Idempotent: nếu đã thanh toán thì bỏ qua an toàn
         }
-        if (this.status != OrderStatus.PENDING) {
+        if (!forceAcceptVerifiedPayment && this.status != OrderStatus.PENDING) {
             throw new DomainException("INVALID_ORDER_STATE",
                     "Đơn hàng đang ở trạng thái '" + this.status + "', không thể chuyển thành đã thanh toán");
         }
         Instant now = paymentTime != null ? paymentTime : Instant.now();
-        if (now.isAfter(this.expiresAt)) {
+        if (!forceAcceptVerifiedPayment && now.isAfter(this.expiresAt)) {
             this.status = OrderStatus.EXPIRED;
             this.updatedAt = now;
             throw new DomainException("ORDER_EXPIRED", "Đơn hàng đã hết hạn thanh toán (15 phút)");

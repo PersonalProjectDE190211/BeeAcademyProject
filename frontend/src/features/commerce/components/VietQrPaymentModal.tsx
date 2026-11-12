@@ -7,14 +7,15 @@ import {
   Clock,
   Copy,
   ExternalLink,
+  Lock,
   QrCode,
   RefreshCw,
   ShieldCheck,
   X,
 } from 'lucide-react';
-import { commerceApi, OrderDto } from '../api/commerceApi';
+import { commerceApi } from '../api/commerceApi';
 import { formatVnd } from '@/shared/types/api';
-import { Badge, Button } from '@/shared/ui/primitives';
+import { Button } from '@/shared/ui/primitives';
 
 interface VietQrPaymentModalProps {
   isOpen: boolean;
@@ -26,12 +27,18 @@ interface VietQrPaymentModalProps {
     totalAmountVnd: number;
     expiresAt?: string;
     status?: string;
+    qrCodeUrl?: string;
+    checkoutUrl?: string;
+    bankBin?: string;
+    bankName?: string;
+    accountNumber?: string;
+    accountName?: string;
   } | null;
   onPaymentSuccess?: () => void;
 }
 
-const BANK_INFO = {
-  bankId: '970422', // MBBank Napas BIN
+const DEFAULT_BANK_INFO = {
+  bankId: '970422',
   bankName: 'Ngân hàng Quân Đội (MBBank)',
   accountNumber: '0348756972',
   accountHolder: 'BEE ACADEMY',
@@ -54,7 +61,6 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
     if (!isOpen || !order) return;
     setIsPaid(order.status === 'PAID');
 
-    // Calculate time left based on expiresAt or default 15 minutes
     if (order.expiresAt) {
       const expires = new Date(order.expiresAt).getTime();
       const diffSec = Math.max(0, Math.floor((expires - Date.now()) / 1000));
@@ -70,15 +76,14 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
     return () => clearInterval(timer);
   }, [isOpen, order]);
 
-  // Periodic polling for payment status every 5 seconds if open and not paid
+  // Periodic active verification polling against PayOS via Backend every 5 seconds
   useEffect(() => {
     if (!isOpen || !order || isPaid) return;
 
     const interval = setInterval(async () => {
       try {
-        const orders = await commerceApi.getMyOrders();
-        const found = orders.find((o: OrderDto) => o.id === order.id);
-        if (found && found.status === 'PAID') {
+        const verified = await commerceApi.verifyOrderPayment(order.id);
+        if (verified && verified.status === 'PAID') {
           setIsPaid(true);
           toast.success('Xác nhận thanh toán thành công qua PayOS VietQR!');
           if (onPaymentSuccess) onPaymentSuccess();
@@ -93,6 +98,11 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
 
   if (!isOpen || !order) return null;
 
+  const bankBin = order.bankBin || DEFAULT_BANK_INFO.bankId;
+  const bankName = order.bankName || DEFAULT_BANK_INFO.bankName;
+  const accountNumber = order.accountNumber || DEFAULT_BANK_INFO.accountNumber;
+  const accountHolder = order.accountName || DEFAULT_BANK_INFO.accountHolder;
+
   const handleCopy = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(fieldName);
@@ -105,16 +115,16 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
   const handleManualCheck = async () => {
     setChecking(true);
     try {
-      const orders = await commerceApi.getMyOrders();
-      const found = orders.find((o: OrderDto) => o.id === order.id);
-      if (found && found.status === 'PAID') {
+      const verified = await commerceApi.verifyOrderPayment(order.id);
+      if (verified && verified.status === 'PAID') {
         setIsPaid(true);
         toast.success('Chúc mừng! Đơn hàng đã được thanh toán thành công.');
         if (onPaymentSuccess) onPaymentSuccess();
       } else {
-        toast('Hệ thống chưa nhận được giao dịch. Vui lòng kiểm tra lại sau ít phút hoặc bảo đảm nội dung chuyển khoản chính xác.', {
-          icon: '⏳',
-        });
+        toast(
+          'Hệ thống đang chờ tín hiệu từ ngân hàng/PayOS. Vui lòng kiểm tra lại sau ít giây hoặc bảo đảm bạn đã quét đúng mã QR.',
+          { icon: '⏳' }
+        );
       }
     } catch {
       toast.error('Không thể kiểm tra trạng thái thanh toán lúc này.');
@@ -129,7 +139,10 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const qrImageUrl = `https://img.vietqr.io/image/${BANK_INFO.bankId}-${BANK_INFO.accountNumber}-compact2.png?amount=${order.totalAmountVnd}&addInfo=${encodeURIComponent(order.paymentRef)}&accountName=${encodeURIComponent(BANK_INFO.accountHolder)}`;
+  // Ưu tiên ảnh QR động EMVCo khóa cứng số tiền trả về từ PayOS SDK ở Backend
+  const qrImageUrl =
+    order.qrCodeUrl ||
+    `https://img.vietqr.io/image/${bankBin}-${accountNumber}-compact2.png?amount=${order.totalAmountVnd}&addInfo=${encodeURIComponent(order.paymentRef)}&accountName=${encodeURIComponent(accountHolder)}`;
 
   return (
     <div
@@ -145,9 +158,9 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
               <QrCode className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-ink">Thanh toán VietQR 24/7</h3>
+              <h3 className="text-lg font-bold text-ink">Thanh toán VietQR 24/7 (PayOS)</h3>
               <p className="text-xs text-ink-muted">
-                Đơn hàng #{order.orderCode} • Cổng PayOS Napas 247
+                Đơn hàng #{order.orderCode} • Mã QR khóa cứng số tiền & tự động mở khóa
               </p>
             </div>
           </div>
@@ -203,17 +216,28 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
                   <div className="relative overflow-hidden rounded-xl bg-white p-2 shadow-sm border border-sand">
                     <img
                       src={qrImageUrl}
-                      alt="VietQR Code"
+                      alt="PayOS Dynamic VietQR Code"
                       className="h-56 w-56 object-contain"
                     />
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-brand-700">
                     <ShieldCheck className="h-4 w-4" />
-                    <span>Quét mã bằng app ngân hàng bất kỳ</span>
+                    <span>Mã QR động PayOS (Khóa cứng số tiền)</span>
                   </div>
-                  <p className="mt-1 text-[11px] text-ink-muted max-w-[200px]">
-                    Hệ thống tự động điền đúng số tiền và nội dung chuyển khoản
+                  <p className="mt-1 text-[11px] text-ink-muted max-w-[220px]">
+                    Quét bằng App Ngân hàng bất kỳ — Số tiền và nội dung được cố định tự động, không thể sửa đổi
                   </p>
+                  {order.checkoutUrl && (
+                    <a
+                      href={order.checkoutUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+                    >
+                      <span>Mở trang cổng thanh toán PayOS</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
                 </div>
 
                 {/* Transfer Info Column */}
@@ -222,21 +246,21 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
                     {/* Bank Name */}
                     <div>
                       <span className="text-xs text-ink-muted">Ngân hàng thụ hưởng</span>
-                      <p className="font-semibold text-ink">{BANK_INFO.bankName}</p>
+                      <p className="font-semibold text-ink">{bankName}</p>
                     </div>
 
                     {/* Account Number */}
                     <div className="flex items-center justify-between border-t border-sand-soft pt-2">
                       <div>
-                        <span className="text-xs text-ink-muted">Số tài khoản</span>
+                        <span className="text-xs text-ink-muted">Số tài khoản nhận (VA PayOS)</span>
                         <p className="font-mono text-base font-bold text-ink">
-                          {BANK_INFO.accountNumber}
+                          {accountNumber}
                         </p>
                       </div>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleCopy(BANK_INFO.accountNumber, 'Số tài khoản')}
+                        onClick={() => handleCopy(accountNumber, 'Số tài khoản')}
                       >
                         {copiedField === 'Số tài khoản' ? (
                           <Check className="h-3.5 w-3.5 text-emerald-600" />
@@ -251,39 +275,29 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
                     <div className="border-t border-sand-soft pt-2">
                       <span className="text-xs text-ink-muted">Tên chủ tài khoản</span>
                       <p className="font-bold text-ink uppercase tracking-wider">
-                        {BANK_INFO.accountHolder}
+                        {accountHolder}
                       </p>
                     </div>
 
-                    {/* Amount */}
+                    {/* Fixed Amount (Read-Only Locked) */}
                     <div className="flex items-center justify-between border-t border-sand-soft pt-2">
                       <div>
-                        <span className="text-xs text-ink-muted">Số tiền cần thanh toán</span>
+                        <span className="text-xs text-ink-muted">Số tiền cố định (Không chỉnh sửa)</span>
                         <p className="text-lg font-black text-brand-700">
                           {formatVnd(order.totalAmountVnd)}
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          handleCopy(String(order.totalAmountVnd), 'Số tiền')
-                        }
-                      >
-                        {copiedField === 'Số tiền' ? (
-                          <Check className="h-3.5 w-3.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                        {copiedField === 'Số tiền' ? 'Đã chép' : 'Chép'}
-                      </Button>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                        <Lock className="h-3 w-3" />
+                        Cố định
+                      </span>
                     </div>
 
                     {/* Transfer Content */}
                     <div className="flex items-center justify-between border-t border-sand-soft pt-2 bg-amber-50/70 -mx-3.5 -mb-3.5 p-3 rounded-b-xl border-t-amber-100">
                       <div>
                         <span className="text-xs font-semibold text-amber-900">
-                          Nội dung chuyển khoản (bắt buộc)
+                          Nội dung định danh tự động
                         </span>
                         <p className="font-mono text-sm font-black text-brand-700">
                           {order.paymentRef}
@@ -305,7 +319,7 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
                   </div>
 
                   <p className="text-xs text-ink-muted leading-relaxed">
-                    ⚠️ <strong>Lưu ý:</strong> Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống đối soát tự động kích hoạt tài khoản trong vòng 30 giây.
+                    🔒 <strong>Bảo vệ giao dịch:</strong> Vui lòng quét trực tiếp mã QR để số tiền và nội dung được khóa cứng chính xác. Hệ thống tự động đối soát và mở khóa học trong 5 giây.
                   </p>
                 </div>
               </div>
@@ -339,4 +353,3 @@ export const VietQrPaymentModal: React.FC<VietQrPaymentModalProps> = ({
     </div>
   );
 };
-

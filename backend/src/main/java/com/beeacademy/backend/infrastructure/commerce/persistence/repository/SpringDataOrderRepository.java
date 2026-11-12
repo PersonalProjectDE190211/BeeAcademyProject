@@ -19,5 +19,7 @@ public interface SpringDataOrderRepository extends JpaRepository<OrderJpaEntity,
     List<OrderJpaEntity> findByStudentIdOrderByCreatedAtDesc(UUID studentId);
 
     List<OrderJpaEntity> findByStatusAndExpiresAtBefore(String status, Instant threshold);
+
+    List<OrderJpaEntity> findByStatusOrderByCreatedAtDesc(String status);
 }
 

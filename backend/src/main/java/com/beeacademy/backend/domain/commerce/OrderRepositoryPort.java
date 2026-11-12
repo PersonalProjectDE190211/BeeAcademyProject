@@ -18,5 +18,9 @@ public interface OrderRepositoryPort {
     List<Order> findByStudentId(UUID studentId);
 
     List<Order> findPendingOrdersExpiredBefore(Instant threshold);
+
+    default List<Order> findActivePendingOrders() {
+        return List.of();
+    }
 }
 

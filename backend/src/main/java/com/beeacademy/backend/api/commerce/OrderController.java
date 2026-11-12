@@ -64,6 +64,14 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin đơn hàng thành công", result));
     }
 
+    @Operation(summary = "Chủ động đối chiếu & xác nhận thanh toán đơn hàng từ PayOS", description = "Kiểm tra trực tiếp trạng thái giao dịch trên cổng PayOS và tự động kích hoạt khóa học nếu đã thanh toán thành công")
+    @PostMapping("/{id}/verify")
+    public ResponseEntity<ApiResponse<OrderResult>> verifyOrderPayment(@PathVariable UUID id) {
+        UUID studentId = SecurityUtils.requireCurrentUserId();
+        OrderResult result = manageOrderUseCase.verifyOrderPayment(id, studentId);
+        return ResponseEntity.ok(ApiResponse.success("Kiểm tra trạng thái thanh toán thành công", result));
+    }
+
     @Operation(summary = "Hủy đơn hàng đang chờ thanh toán", description = "Học sinh chủ động hủy đơn hàng khi không còn nhu cầu thanh toán")
     @PostMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<OrderResult>> cancelOrder(@PathVariable UUID id) {

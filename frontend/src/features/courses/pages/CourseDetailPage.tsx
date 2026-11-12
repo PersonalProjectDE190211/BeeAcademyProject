@@ -48,6 +48,12 @@ export const CourseDetailPage: React.FC = () => {
     totalAmountVnd: number;
     expiresAt?: string;
     status?: string;
+    qrCodeUrl?: string;
+    checkoutUrl?: string;
+    bankBin?: string;
+    bankName?: string;
+    accountNumber?: string;
+    accountName?: string;
   } | null>(null);
 
   const [rating, setRating] = useState(5);
@@ -96,23 +102,40 @@ export const CourseDetailPage: React.FC = () => {
             orderId: string;
             orderCode?: number;
             paymentRef?: string;
+            checkoutUrl?: string;
+            qrCodeUrl?: string;
             totalAmountVnd?: number;
             expiresAt?: string;
             status?: string;
+            bankBin?: string;
+            bankName?: string;
+            accountNumber?: string;
+            accountName?: string;
           }>
         >('/student/orders', {
           courseIds: [course.id],
           paymentMethod: 'PAYOS',
         });
         const orderData = res.data.data;
-        toast.success('Đã khởi tạo đơn hàng VietQR!');
+        if (orderData.status === 'PAID') {
+          toast.success('Đã kích hoạt khóa học thành công!');
+          navigate(`/learning/courses/${course.id}`);
+          return;
+        }
+        toast.success('Đã khởi tạo mã thanh toán PayOS VietQR!');
         setPaymentOrder({
           id: orderData.orderId,
           orderCode: orderData.orderCode || Date.now() % 1000000,
-          paymentRef: orderData.paymentRef || `PAY-${orderData.orderId.substring(0, 8).toUpperCase()}`,
-          totalAmountVnd: orderData.totalAmountVnd || course.priceVnd,
+          paymentRef: orderData.paymentRef || `BEE${orderData.orderCode || ''}`,
+          totalAmountVnd: orderData.totalAmountVnd ?? course.priceVnd,
           expiresAt: orderData.expiresAt,
           status: orderData.status || 'PENDING',
+          qrCodeUrl: orderData.qrCodeUrl,
+          checkoutUrl: orderData.checkoutUrl,
+          bankBin: orderData.bankBin,
+          bankName: orderData.bankName,
+          accountNumber: orderData.accountNumber,
+          accountName: orderData.accountName,
         });
       }
     } catch (err) {
