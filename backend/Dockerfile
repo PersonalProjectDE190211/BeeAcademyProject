@@ -33,7 +33,7 @@ USER appuser
 EXPOSE 8080
 
 # Cấu hình GC và bộ nhớ tối ưu cho môi trường container
-ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -Djava.net.preferIPv4Stack=true -Djava.security.egd=file:/dev/./urandom"
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:${PORT:-8080}/actuator/health || exit 1
