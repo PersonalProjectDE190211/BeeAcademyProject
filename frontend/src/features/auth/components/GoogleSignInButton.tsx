@@ -44,6 +44,9 @@ interface GoogleSignInButtonProps {
   style?: React.CSSProperties;
 }
 
+const DEFAULT_GOOGLE_CLIENT_ID =
+  '562390685704-gn1134f6gql8dcfianuspf859q3tmvmm.apps.googleusercontent.com';
+
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   mode = 'signin',
   accountType = 'student',
@@ -56,16 +59,17 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   const setSession = useAuthStore((s) => s.setSession);
 
   const [loading, setLoading] = useState(false);
-  const [showDevModal, setShowDevModal] = useState(false);
-  const [devEmail, setDevEmail] = useState('hocsinh.google@gmail.com');
-  const [devFullName, setDevFullName] = useState('Học Sinh Google');
+  const [gsiReady, setGsiReady] = useState(false);
 
   const googleButtonRef = useRef<HTMLDivElement>(null);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-  const isRealClientIdConfigured =
-    Boolean(clientId) &&
-    !clientId.includes('your-google-client-id') &&
-    clientId.endsWith('.apps.googleusercontent.com');
+  const rawClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim();
+  const clientId =
+    rawClientId &&
+    !rawClientId.includes('YOUR_GOOGLE_CLIENT_ID') &&
+    !rawClientId.includes('your-google-client-id') &&
+    rawClientId.endsWith('.apps.googleusercontent.com')
+      ? rawClientId
+      : DEFAULT_GOOGLE_CLIENT_ID;
 
   const handleAuthSuccess = (accessToken: string, user: any) => {
     setSession(accessToken, user);
@@ -100,30 +104,10 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   };
 
   useEffect(() => {
-    if (!isRealClientIdConfigured) return;
-
-    const loadGsiScript = () => {
-      if (window.google?.accounts?.id) {
-        initGoogleSignIn();
-        return;
-      }
-
-      const existingScript = document.getElementById('google-gsi-client');
-      if (!existingScript) {
-        const script = document.createElement('script');
-        script.id = 'google-gsi-client';
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        script.onload = () => initGoogleSignIn();
-        document.body.appendChild(script);
-      } else {
-        existingScript.addEventListener('load', initGoogleSignIn);
-      }
-    };
+    let mounted = true;
 
     const initGoogleSignIn = () => {
-      if (!window.google?.accounts?.id || !googleButtonRef.current) return;
+      if (!mounted || !window.google?.accounts?.id || !googleButtonRef.current) return;
 
       window.google.accounts.id.initialize({
         client_id: clientId,
@@ -134,6 +118,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         },
       });
 
+      googleButtonRef.current.innerHTML = '';
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         type: 'standard',
         theme: 'outline',
@@ -144,30 +129,40 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         width: 400,
         locale: 'vi',
       });
+      setGsiReady(true);
     };
 
-    loadGsiScript();
-  }, [clientId, isRealClientIdConfigured, mode, accountType]);
-
-  const handleDevMockLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!devEmail.trim()) {
-      toast.error('Vui lòng nhập email');
-      return;
+    if (window.google?.accounts?.id) {
+      initGoogleSignIn();
+      return () => {
+        mounted = false;
+      };
     }
-    const mockSub = 'google_sub_' + Math.abs(hashCode(devEmail.trim()));
-    const mockToken = `mock_google_token:${mockSub}:${devEmail.trim().toLowerCase()}:true:${encodeURIComponent(
-      devFullName.trim()
-    )}`;
-    setShowDevModal(false);
-    processGoogleToken(mockToken);
-  };
+
+    const existingScript = document.getElementById('google-gsi-client') as HTMLScriptElement | null;
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.id = 'google-gsi-client';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogleSignIn;
+      document.body.appendChild(script);
+    } else {
+      existingScript.addEventListener('load', initGoogleSignIn);
+    }
+
+    return () => {
+      mounted = false;
+      existingScript?.removeEventListener('load', initGoogleSignIn);
+    };
+  }, [clientId, mode, accountType]);
 
   const handleButtonClick = () => {
-    if (isRealClientIdConfigured && window.google?.accounts?.id) {
+    if (window.google?.accounts?.id) {
       window.google.accounts.id.prompt();
-    } else if (!isRealClientIdConfigured) {
-      setShowDevModal(true);
+    } else {
+      toast.error('Đang tải dịch vụ Đăng nhập Google. Vui lòng thử lại sau giây lát.');
     }
   };
 
@@ -205,119 +200,17 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         </button>
 
         {/* Transparent Interactive Google GIS Overlay for real OAuth popup */}
-        {isRealClientIdConfigured && !loading && (
+        {!loading && (
           <div
             aria-hidden="true"
-            className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden rounded-[14px] opacity-[0.01] cursor-pointer"
+            className={`absolute inset-0 z-10 flex items-center justify-center overflow-hidden rounded-[14px] opacity-[0.01] cursor-pointer ${
+              gsiReady ? 'pointer-events-auto' : 'pointer-events-none'
+            }`}
           >
             <div ref={googleButtonRef} className="w-full scale-x-115 flex justify-center" />
           </div>
         )}
       </div>
-
-      {/* Dev Mode Modal - Cho phép lập trình viên kiểm thử khi chưa cấu hình Client ID */}
-      {showDevModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-sand">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blush text-brand-700">
-                <svg className="h-5 w-5" viewBox="0 0 48 48">
-                  <path
-                    fill="#EA4335"
-                    d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-                  />
-                  <path
-                    fill="#4285F4"
-                    d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-ink">Mô phỏng Đăng nhập Google (Dev Mode)</h3>
-                <p className="text-xs text-ink-muted">Kiểm thử toàn diện luồng xác thực Google</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-ink-muted mb-4 bg-cream p-3 rounded-xl border border-sand">
-              Chưa cấu hình Google Client ID thật trong{' '}
-              <code className="text-brand-700 font-semibold">.env</code>. Hệ thống sẽ sinh Google ID
-              Token hợp lệ để backend giải mã và liên kết qua{' '}
-              <code className="text-brand-700 font-semibold">ExternalLogin</code>.
-            </p>
-
-            <form onSubmit={handleDevMockLogin} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-ink mb-1">
-                  Email tài khoản Google
-                </label>
-                <input
-                  type="email"
-                  value={devEmail}
-                  onChange={(e) => setDevEmail(e.target.value)}
-                  className="auth-input"
-                  placeholder="name@gmail.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-ink mb-1">
-                  Họ và tên hiển thị
-                </label>
-                <input
-                  type="text"
-                  value={devFullName}
-                  onChange={(e) => setDevFullName(e.target.value)}
-                  className="auth-input"
-                  placeholder="Nguyễn Văn A"
-                  required
-                />
-              </div>
-
-              {mode === 'signup' && (
-                <div className="text-xs text-ink-muted bg-blush border border-sand p-2.5 rounded-xl">
-                  Vai trò đăng ký:{' '}
-                  <strong className="uppercase text-brand-700">{accountType}</strong>
-                </div>
-              )}
-
-              <div className="flex gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDevModal(false)}
-                  className="flex-1 rounded-xl border border-sand px-3 py-2.5 text-xs font-semibold text-ink hover:bg-blush cursor-pointer"
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="auth-cta flex-1 rounded-xl px-3 py-2.5 text-xs font-semibold text-white cursor-pointer disabled:opacity-60"
-                >
-                  {loading ? 'Đang gửi...' : 'Xác nhận Đăng nhập'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
-
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return hash;
-}
