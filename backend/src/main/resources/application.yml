@@ -27,8 +27,8 @@ spring:
   # Datasource: Supabase Postgres (kết nối qua JDBC, KHÔNG dùng Supabase client)
   # --------------------------------------------------------------------------
   datasource:
-    url: jdbc:postgresql://${SUPABASE_DB_HOST:db.nmdphoootxnhwborgncy.supabase.co}:${SUPABASE_DB_PORT:5432}/${SUPABASE_DB_NAME:postgres}?sslmode=require&prepareThreshold=0
-    username: ${SUPABASE_DB_USER:postgres}
+    url: jdbc:postgresql://${SUPABASE_DB_HOST:aws-1-ap-northeast-1.pooler.supabase.com}:${SUPABASE_DB_PORT:5432}/${SUPABASE_DB_NAME:postgres}?sslmode=require&prepareThreshold=0
+    username: ${SUPABASE_DB_USER:postgres.nmdphoootxnhwborgncy}
     password: ${SUPABASE_DB_PASSWORD:Thanhdatcan5@}
     driver-class-name: org.postgresql.Driver
     hikari:
