@@ -104,7 +104,7 @@ export interface AddLessonPayload {
 export const courseApi = {
   async searchPublicCourses(params?: SearchCoursesParams): Promise<CourseSummary[]> {
     const res = await httpClient.get<ApiResponse<CourseSummary[]>>('/courses/public', { params });
-    return res.data.data;
+    return Array.isArray(res.data?.data) ? res.data.data : [];
   },
 
   async getPublicCourseById(id: string): Promise<CourseDetail> {
@@ -119,14 +119,14 @@ export const courseApi = {
 
   async getCategories(): Promise<CategoryItem[]> {
     const res = await httpClient.get<ApiResponse<CategoryItem[]>>('/courses/public/categories');
-    return res.data.data;
+    return Array.isArray(res.data?.data) ? res.data.data : [];
   },
 
   async getCourseReviews(courseId: string): Promise<CourseReviewItem[]> {
     const res = await httpClient.get<ApiResponse<CourseReviewItem[]>>(
       `/courses/public/${courseId}/reviews`
     );
-    return res.data.data;
+    return Array.isArray(res.data?.data) ? res.data.data : [];
   },
 
   async submitReview(

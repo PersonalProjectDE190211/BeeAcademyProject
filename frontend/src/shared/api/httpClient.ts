@@ -11,9 +11,19 @@ interface RefreshPayload {
   user: UserProfile;
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
-  ? `${import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '')}/api`
-  : '/api';
+function resolveApiBase(): string {
+  const raw = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+  if (raw) {
+    const normalized = raw.replace(/\/+$/, '').replace(/\/api$/i, '');
+    return `${normalized}/api`;
+  }
+  if (import.meta.env.PROD) {
+    return 'https://beeacademyproject.onrender.com/api';
+  }
+  return '/api';
+}
+
+const API_BASE = resolveApiBase();
 
 export const httpClient = axios.create({
   baseURL: API_BASE,
@@ -54,7 +64,21 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 httpClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const contentType = String(response.headers?.['content-type'] || '').toLowerCase();
+    const isHtmlPayload =
+      contentType.includes('text/html') ||
+      (typeof response.data === 'string' && /^\s*(<!doctype html|<html)/i.test(response.data));
+
+    if (isHtmlPayload) {
+      return Promise.reject(
+        new Error(
+          'Không thể kết nối tới máy chủ Backend API (nhận phản hồi HTML tĩnh thay vì JSON). Vui lòng kiểm tra cấu hình VITE_API_BASE_URL hoặc trạng thái dịch vụ Render.'
+        )
+      );
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryableRequestConfig | undefined;
     const isAuthEndpoint =

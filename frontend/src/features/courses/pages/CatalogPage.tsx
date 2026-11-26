@@ -58,8 +58,8 @@ export const CatalogPage: React.FC = () => {
         }),
         courseApi.getCategories().catch(() => []),
       ]);
-      setCourses(courseList);
-      setCategories(catList);
+      setCourses(Array.isArray(courseList) ? courseList : []);
+      setCategories(Array.isArray(catList) ? catList : []);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Không thể tải danh mục khóa học.'));
     } finally {

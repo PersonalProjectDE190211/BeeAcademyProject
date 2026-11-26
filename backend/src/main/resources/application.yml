@@ -99,9 +99,9 @@ supabase:
 # ============================================================================
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,https://bee-academy-project.vercel.app}
   dev-mode: ${DEV_MODE:false}
-  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  frontend-url: ${FRONTEND_URL:https://bee-academy-project.vercel.app}
   google:
     client-id: ${GOOGLE_CLIENT_ID:562390685704-gn1134f6gql8dcfianuspf859q3tmvmm.apps.googleusercontent.com}
   certificate:
